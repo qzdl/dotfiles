@@ -7,6 +7,11 @@
 # export FILE="ranger"
 # export TERMINAL="st"
 
+# #---HiDpi Font bullshit---# #
+font pango:DejaVu Sans mono 32
+font pango:DejaVu Sans mono, Terminus Bold Semi-Condensed 32
+font pango:Terminus 32px
+
 # #---Basic Definitions---# #
 for_window [class="^.*"] border pixel 2
 gaps inner 15
@@ -50,7 +55,7 @@ exec_always --no-startup-id mpdupdate
 exec_always --no-startup-id podentr
 
 bar {
-	font pango:mono 10
+	font pango:mono 12
 	status_command i3blocks
 	position top
 	mode dock
@@ -84,8 +89,8 @@ bindsym $mod+Insert		exec --no-startup-id showclip
 bindsym $mod+q			[con_id="__focused__" instance="^(?!dropdown_).*$"] kill
 bindsym $mod+Shift+q		[con_id="__focused__" instance="^(?!dropdown_).*$"] kill
 
-bindsym $mod+w			exec $term -e nmtui
-bindsym $mod+Shift+w		exec --no-startup-id $BROWSER
+bindsym $mod+Shift+w		exec $term -e nmtui
+bindsym $mod+w			exec --no-startup-id $BROWSER
 
 bindsym $mod+e			exec $term -e neomutt && pkill -RTMIN+12 i3blocks
 bindsym $mod+Shift+e		exec --no-startup-id tutorialvids
@@ -145,7 +150,8 @@ bindsym $mod+Shift+l		move right 30
 bindsym $mod+z			gaps outer current plus 5
 bindsym $mod+Shift+z		gaps outer current minus 5
 
-bindsym $mod+x			exec --no-startup-id mpc pause; exec --no-startup-id pauseallmpv ; exec --no-startup-id i3lock -e -f -c 1d2021
+bindsym $mod+x			exec --no-startup-id mpc pause; exec --no-startup-id pauseallmpv; exec rm -f /tmp/screenshot.png /tmp/out.png && touch /tmp/screenshot.png && scrot /tmp/screenshot.png && ~/git/corrupter/corrupter /tmp/screenshot.png /tmp/out.png && i3lock -i /tmp/out.png
+
 bindsym $mod+Shift+x		exec --no-startup-id prompt "Shutdown computer?" "$shutdown"
 
 bindsym $mod+c			exec --no-startup-id cabl
