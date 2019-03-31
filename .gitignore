@@ -16,6 +16,12 @@ vimwiki/
 .local/share/xorg/
 .local/share/zathura/
 .config/pulse/
+.config/mutt/
+.gnupg/
+.mail/
+.msmtprc
+.offlineimap/
+.offlineimaprc
 
 # files
 .python_history
