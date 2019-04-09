@@ -20,6 +20,7 @@ Plug 'vimwiki/vimwiki'
 Plug 'bling/vim-airline'
 Plug 'tpope/vim-commentary'
 Plug 'vifm/vifm.vim'
+Plug 'w0rp/ale'
 call plug#end()
 
 "=====[ Goyo ]====="

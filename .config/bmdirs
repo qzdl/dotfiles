@@ -1,10 +1,19 @@
 # You can add comments to these files with #
-h	~/
-d	~/Documents
-D	~/Downloads
-m	~/Music
-pp	~/Pictures
-vv	~/Videos
-cf	~/.config
-sc	~/.scripts
-mn	/mnt
+h   ~/
+d   ~/Documents
+D   ~/Downloads
+m   ~/Music
+pp  ~/Pictures
+vv  ~/Videos
+cf  ~/.config
+sc  ~/.scripts
+mn  /mnt
+
+# uni
+u   ~/uni
+um  ~/uni/modules
+
+# library
+lb  ~/lib
+lbv ~/lib/videos
+lbb ~/lib/books
