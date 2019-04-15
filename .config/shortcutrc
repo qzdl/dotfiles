@@ -27,6 +27,7 @@ cfu="$EDITOR ~/.config/newsboat/urls" \
 cfn="$EDITOR ~/.config/newsboat/config" \
 cfmb="$EDITOR ~/.config/ncmpcpp/bindings" \
 cfmc="$EDITOR ~/.config/ncmpcpp/config" \
+ur="$EDITOR ~/uni/README.md" \
 er="$EDITOR ~/Documents/referbib" \
 eb="$EDITOR ~/Documents/LaTeX/uni.bib" \
 cv="$EDITOR ~/Documents/LaTeX/cv.tex" \

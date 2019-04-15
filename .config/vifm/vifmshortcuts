@@ -69,6 +69,7 @@ map cfu :e ~/.config/newsboat/urls<CR>
 map cfn :e ~/.config/newsboat/config<CR>
 map cfmb :e ~/.config/ncmpcpp/bindings<CR>
 map cfmc :e ~/.config/ncmpcpp/config<CR>
+map ur :e ~/uni/README.md<CR>
 map er :e ~/Documents/referbib<CR>
 map eb :e ~/Documents/LaTeX/uni.bib<CR>
 map cv :e ~/Documents/LaTeX/cv.tex<CR>
