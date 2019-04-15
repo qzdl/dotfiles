@@ -22,6 +22,9 @@ vimwiki/
 .msmtprc
 .offlineimap/
 .offlineimaprc
+.config/dconf/
+.local/bin/
+.local/share/vifm/
 
 # files
 .python_history
