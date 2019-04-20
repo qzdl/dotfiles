@@ -93,6 +93,8 @@ set tabstop=4   " number of visual spaces per TAB
                 " number of spaces in tab when editing
 set softtabstop=4
 set expandtab   " tabs are spaces
+                " '>>' indents are 4 spaces
+set shiftwidth=4
                 " sith whitespace detection
 exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
 set list
