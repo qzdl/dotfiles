@@ -10,24 +10,27 @@ if ! filereadable(expand('~/.config/nvim/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.config/nvim/plugged')
-Plug 'tpope/vim-surround'
 Plug 'scrooloose/nerdtree'
 Plug 'junegunn/goyo.vim'
 Plug 'PotatoesMaster/i3-vim-syntax'
 Plug 'jreybert/vimagit'
-Plug 'LukeSmithxyz/vimling'
 Plug 'vimwiki/vimwiki'
 Plug 'bling/vim-airline'
 Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-surround'
 Plug 'vifm/vifm.vim'
 Plug 'w0rp/ale'
 call plug#end()
 
+"=====[ ALE ]====="
+                " fix files on save
+let g:ale_fix_on_save = 1
+
 "=====[ Goyo ]====="
-                " Makes text more readable when writing prose:
+                " makes text more readable when writing prose
 map <leader>f :Goyo \| set bg=light \| set linebreak<CR>
-                " Enable Goyo by default for mutt writting
-                " Goyo's width will be the line limit in mutt.
+                " enable Goyo by default for mutt writting,
+                " goyo's width will be the line limit in mutt.
 autocmd BufRead,BufNewFile /tmp/neomutt* let g:goyo_width=80
 autocmd BufRead,BufNewFile /tmp/neomutt* :Goyo \| set bg=light
 
@@ -36,13 +39,6 @@ autocmd BufRead,BufNewFile /tmp/neomutt* :Goyo \| set bg=light
 map <leader>n :NERDTreeToggle<CR>
                 " configuration for nerdtree window
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-
-"=====[ vimling ]====="
-nm <leader>d :call ToggleDeadKeys()<CR>
-imap <leader>d <esc>:call ToggleDeadKeys()<CR>a
-nm <leader>i :call ToggleIPA()<CR>
-imap <leader>i <esc>:call ToggleIPA()<CR>a
-nm <leader>q :call ToggleProse()<CR>
 
 "=====[ vimwiki ]====="
                 " ensure files are read properly (part 1)
@@ -104,11 +100,11 @@ autocmd BufWritePre * %s/\s\+$//e
 "==========[ File Config ]=========="
                 " TODO find out what this means
 filetype plugin on
-                " Disable auto comment on newline
+                " disable auto comment on newline
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
                 " compile document (groff/LaTeX/markdown/etc)
 map <leader>c :w! \| !compiler <c-r>%<CR>
-                " Open corresponding .pdf/.html or preview
+                " open corresponding .pdf/.html or preview
 map <leader>p :!opout <c-r>%<CR><CR>
                 " cleans out tex build files upon quit of .tex
 autocmd VimLeave *.tex !texclear %
@@ -170,7 +166,7 @@ autocmd BufWritePost ~/.config/bmdirs,~/.config/bmfiles !shortcuts
                 " when Xdefaults/Xresources are updated, run xrdb
 autocmd BufWritePost *Xresources,*Xdefaults !xrdb %
 
-                " Navigating with guides
+                " navigating with guides
 inoremap <leader><leader> <Esc>/<++><Enter>"_c4l
 vnoremap <leader><leader> <Esc>/<++><Enter>"_c4l
 map <leader><leader> <Esc>/<++><Enter>"_c4l

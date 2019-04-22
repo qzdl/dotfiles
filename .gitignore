@@ -25,6 +25,7 @@ vimwiki/
 .config/dconf/
 .local/bin/
 .local/share/vifm/
+Music/
 
 # files
 .python_history
