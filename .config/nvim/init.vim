@@ -12,6 +12,7 @@ let mapleader =","
     call plug#begin('~/.config/nvim/plugged')
         Plug 'scrooloose/nerdtree'
         Plug 'junegunn/goyo.vim'
+        Plug 'junegunn/vim-easy-align'
         Plug 'PotatoesMaster/i3-vim-syntax'
         Plug 'jreybert/vimagit'
         Plug 'vimwiki/vimwiki'
@@ -26,6 +27,11 @@ let mapleader =","
                     " fix files on save
     let g:ale_fix_on_save = 1
 
+"=====[ easy align ]====="
+                    " Start interactive EasyAlign in visual mode (e.g. vipga)
+    xmap ga <Plug>(EasyAlign)
+                    " Start interactive EasyAlign for a motion/text object (e.g. gaip)
+    nmap ga <Plug>(EasyAlign)
 "=====[ Goyo ]====="
                     " makes text more readable when writing prose
     map <leader>f :Goyo \| set bg=light \| set linebreak<CR>
