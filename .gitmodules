@@ -1,0 +1,9 @@
+[submodule "stumpwm/.stumpwm.d"]
+	path = stumpwm/.stumpwm.d
+	url = git@github.com:qzdl/.stumpwm.d.git
+[submodule "emacs/.doom.d"]
+	path = emacs/.doom.d
+	url = git@github.com:qzdl/.doom.d
+[submodule "emacs/.emacs.d"]
+	path = emacs/.emacs.d
+	url = https://github.com/hlissner/doom-emacs.git

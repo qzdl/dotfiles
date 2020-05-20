@@ -51,5 +51,6 @@ miniconda3/
 .config/ncmpcpp/error.log
 .config/vifm/vifm-help.txt
 .config/vifm/vifminfo
+*tmp/
 # more bs
 .z

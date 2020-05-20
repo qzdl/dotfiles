@@ -1,0 +1,11 @@
+# https://org-roam.readthedocs.io/en/latest/roam_protocol/#linux
+# run the below for the mime scheme handler
+# <exec-shell-cmd "xdg-mime default org-protocol.desktop x-scheme-handler/org-protocol">
+
+[Desktop Entry]
+Name=Org-Protocol
+Exec=emacsclient %u
+Icon=emacs-icon
+Type=Application
+Terminal=false
+MimeType=x-scheme-handler/org-protocol
