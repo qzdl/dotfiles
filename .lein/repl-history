@@ -1,0 +1,2 @@
+(alembic.still/distill '[enlive "1.1.5"])
+(require 'alembic/still)
