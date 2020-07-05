@@ -1,0 +1,12 @@
+isaac_arthur='https://www.youtube.com/channel/UCZFipeZtQM5CKUjx6grh54g'
+unibicle_guy='https://www.youtube.com/channel/UC3azLjQuz9s5qk76KEXaTvA'
+luke_smith='https://www.youtube.com/channel/UC2eYFnH61tmytImy1mTYvhA'
+
+yt_channels=( $isaac_arthur $unibicle_guy $luke_smith)
+
+for channel in $yt_channels; do
+  echo "downloading $channel"
+  youtube-dl -f best -i $channel
+done
+
+# creiton - jurasic park audiobook?
