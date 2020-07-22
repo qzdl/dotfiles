@@ -1,1 +1,4 @@
 ;; -*- emacs-lisp; lexical-binding: t; -*-
+
+;; VC
+alias vc "vc-dir ." "Get some version control information for ./"

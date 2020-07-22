@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# A small script for committing and pushing a git repository
+#
 # for ~/.local/bin/
 # <exec-shell-cmd "chmod +x ~/dotfiles/cron/.local/bin/auto-commit">
 # 
@@ -14,4 +16,4 @@
 
 git add .
 git commit -m "auto-commit | $(date -u)"
-git push
+git push && notify-send "Successfully pushed $PWD"

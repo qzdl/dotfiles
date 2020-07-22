@@ -1,0 +1,22 @@
+#                              ██
+#     ██████           ████   ░██
+#    ░██░░░██  ██████ ██░░██  ░██ ██████  █████
+#    ░██  ░██ ██░░░░ ░██ ░██  ░██░░██░░█ ██░░░██
+#    ░██████ ░░█████ ░░█████  ░██ ░██ ░ ░██  ░░
+#  ██░██░░░   ░░░░░██ ░░░░██  ░██ ░██   ░██   ██
+# ░██░██      ██████     ░███ ███░███   ░░█████
+# ░░ ░░      ░░░░░░      ░░░ ░░░ ░░░     ░░░░░
+#
+# <exec-shell-cmd "cd ~/dotfiles && stow psql"
+
+# signifier for null values
+\pset null '(null)'
+
+# nice glyphs
+\pset linestyle unicode
+
+# upcase completion
+\set COMP_KEYWORD_CASE upper
+
+# just fail by default see <link-to-elisp-doc 'qzdl/psql-toggle-error-rollback>
+\set ON_ERROR_ROLLBACK off
