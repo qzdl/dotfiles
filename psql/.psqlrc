@@ -7,7 +7,7 @@
 # ░██░██      ██████     ░███ ███░███   ░░█████
 # ░░ ░░      ░░░░░░      ░░░ ░░░ ░░░     ░░░░░
 #
-# <exec-shell-cmd "cd ~/dotfiles && stow psql"
+# <exec-shell-cmd "cd ~/dotfiles && stow psql">
 
 # signifier for null values
 \pset null '(null)'
