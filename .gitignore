@@ -32,6 +32,7 @@ neo4j/
 miniconda3/
 
 # files
+*cookies
 .python_history
 .bash_history
 .bash_logout
