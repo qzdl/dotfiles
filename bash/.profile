@@ -3,7 +3,7 @@
 
 # Adds `~/.scripts` and all subdirectories to $PATH
 export PATH="$PATH:$(du "$HOME/.scripts/" | cut -f2 | tr '\n' ':' | sed 's/:*$//'):/usr/local/go/bin:$HOME/.local/bin/"
-export EDITOR="nvim"
+export EDITOR="emacsclient -c"
 export TERMINAL="st"
 export BROWSER="firefox"
 export READER="zathura"
