@@ -1,0 +1,15 @@
+* Dotfiles
+
+** emacs
+** vpnkillswitch
+
+** programs
+*** emacs :EDITOR:
+*** firefox :BROWSER:
+*** openvpn :VPN:
+*** R
+***
+*** shfmt :format:
+*** prettier :format:
+*** cljfmt :format:
+*** gofmt :format:
