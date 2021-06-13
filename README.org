@@ -1,4 +1,12 @@
 * Dotfiles
+managed with stow
+
+** deployment
+*** root
+#+begin_src bash
+cd ~/dotfiles/xorg
+sudo stow X11 -t /etc/
+#+end_src
 
 ** emacs
 ** vpnkillswitch

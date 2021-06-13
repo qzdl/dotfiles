@@ -11,39 +11,42 @@
 
 while getopts ":edt:" opt; do
 	case ${opt} in
-		e)
-			# ENABLE KILLSWITCH
-			# Default policies
-			sudo ufw default deny incoming
-			sudo ufw default deny outgoing
+	e)
+		# ENABLE KILLSWITCH
+		# Default policies
+		sudo ufw default deny incoming
+		sudo ufw default deny outgoing
 
-			# Openvpn interface (adjust interface accordingly to your configuration)
-			sudo ufw allow out on tun0
+		# Openvpn interface (adjust interface accordingly to your configuration)
+		sudo ufw allow out on tun0
+		sudo ufw allow out on tun1
 
-			# Openvpn (adjust port accordingly to your vpn setup)
-			sudo ufw allow out to any port 1194
-			;;
-		d)
-			# DISABLE KILLSWITCH
-			sudo ufw --force reset
-			sudo ufw enable
+		# Openvpn (adjust port accordingly to your vpn setup)
+		sudo ufw allow out to any port 1194
+		sudo ufw allow out to any port 80
+		sudo ufw allow out to any port 443
+		;;
+	d)
+		# DISABLE KILLSWITCH
+		sudo ufw --force reset
+		sudo ufw enable
 
-			# delete backUP rules from reset
-			sudo rm /etc/ufw/*.rules.*
+		# delete backUP rules from reset
+		sudo rm /etc/ufw/*.rules.*
 
-			# reset to defaults and enable
-			sudo ufw default deny incoming
-			sudo ufw default allow outgoing
-			;;
-		t)
-			# ADD OUTGOING RULE
-			echo "allow outgoing traffic to $OPTARG"
-			sudo ufw allow out to $OPTARG
-			;;
+		# reset to defaults and enable
+		sudo ufw default deny incoming
+		sudo ufw default allow outgoing
+		;;
+	t)
+		# ADD OUTGOING RULE
+		echo "allow outgoing traffic to $OPTARG"
+		sudo ufw allow out to $OPTARG
+		;;
 	esac
 done
 
-if (( $OPTIND == 1 )); then
+if (($OPTIND == 1)); then
 	echo " "
 	echo -e "Please provide at least one of the following options:\n    -e"
 	echo "        enable killswitch"
