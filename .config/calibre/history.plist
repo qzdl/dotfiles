@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>lineedit_history_choose_library_dialog</key>
+	<array>
+		<string>/home/samuel/calibre-library</string>
+	</array>
+	<key>lineedit_history_store_search_search_author</key>
+	<array>
+		<string>ayn rand</string>
+	</array>
+	<key>lineedit_history_store_search_search_title</key>
+	<array>
+		<string>atlas shrugged</string>
+	</array>
+</dict>
+</plist>

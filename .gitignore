@@ -55,3 +55,6 @@ miniconda3/
 *tmp/
 # more bs
 .z
+*PCSX2*log*
+*PCSX2/log*
+*qBittorrent/rss/

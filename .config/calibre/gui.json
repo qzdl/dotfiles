@@ -1,0 +1,325 @@
+{
+  "basic_metadata_widget_splitter_state": {
+    "__class__": "bytearray",
+    "__value__": "AAAA/wAAAAEAAAADAAAA6AAAAUkAAAEZAf////8BAAAAAQA="
+  },
+  "book_details_splitter_horizontal_state": [
+    true,
+    200
+  ],
+  "book_list_pin_splitter_state": {
+    "__class__": "bytearray",
+    "__value__": "AAAA/wAAAAEAAAACAAABAAAAAEcA/////wEAAAABAA=="
+  },
+  "card_a_view books view state": {
+    "column_alignment": {
+      "size": "center",
+      "timestamp": "center"
+    },
+    "column_positions": {
+      "authors": 2,
+      "collections": 5,
+      "inlibrary": 0,
+      "size": 4,
+      "timestamp": 3,
+      "title": 1
+    },
+    "column_sizes": {
+      "authors": 92,
+      "collections": 92,
+      "inlibrary": 92,
+      "size": 92,
+      "timestamp": 104,
+      "title": 92
+    },
+    "hidden_columns": [],
+    "languages_injected": true,
+    "last_modified_injected": true,
+    "sort_history": [
+      [
+        "timestamp",
+        false
+      ]
+    ]
+  },
+  "card_b_view books view state": {
+    "column_alignment": {
+      "size": "center",
+      "timestamp": "center"
+    },
+    "column_positions": {
+      "authors": 2,
+      "collections": 5,
+      "inlibrary": 0,
+      "size": 4,
+      "timestamp": 3,
+      "title": 1
+    },
+    "column_sizes": {
+      "authors": 92,
+      "collections": 92,
+      "inlibrary": 92,
+      "size": 92,
+      "timestamp": 104,
+      "title": 92
+    },
+    "hidden_columns": [],
+    "languages_injected": true,
+    "last_modified_injected": true,
+    "sort_history": [
+      [
+        "timestamp",
+        false
+      ]
+    ]
+  },
+  "catalog_csv_xml_db_fields": [
+    "author_sort",
+    "authors",
+    "comments",
+    "cover",
+    "timestamp",
+    "formats",
+    "isbn",
+    "identifiers",
+    "languages",
+    "library_name",
+    "ondevice",
+    "pubdate",
+    "publisher",
+    "rating",
+    "series",
+    "series_index",
+    "size",
+    "tags",
+    "title",
+    "title_sort",
+    "id",
+    "uuid"
+  ],
+  "catalog_csv_xml_db_fields_sort_order": {
+    "author_sort": 0,
+    "authors": 1,
+    "comments": 2,
+    "cover": 3,
+    "formats": 5,
+    "id": 20,
+    "identifiers": 7,
+    "isbn": 6,
+    "languages": 8,
+    "library_name": 9,
+    "ondevice": 10,
+    "pubdate": 11,
+    "publisher": 12,
+    "rating": 13,
+    "series": 14,
+    "series_index": 15,
+    "size": 16,
+    "tags": 17,
+    "timestamp": 4,
+    "title": 18,
+    "title_sort": 19,
+    "uuid": 21
+  },
+  "convert_single_dialog_geom": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAAhAAAAMAAAB1wAAAQFAAAAIgAAADEAAAdbAAAEBAAAAAAAAAAAB4AAAAAiAAAAMQAAB1sAAAQE"
+  },
+  "cover_browser_splitter_vertical_state": [
+    false,
+    300
+  ],
+  "custom_colors_for_color_dialog": [
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ],
+    [
+      255,
+      255,
+      255,
+      255
+    ]
+  ],
+  "grid view visible": false,
+  "jobs view column layout3": {
+    "__class__": "bytearray",
+    "__value__": "AAAA/wAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfQAAAAFAQEBAAAAAAAAAAAAAAAAAGT/////AAAAhAAAAAAAAAAFAAAAZAAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAZAAAAAEAAAAAAAAAZAAAAAEAAAAAAAAD6AAAAAAA"
+  },
+  "jobs_dialog_geometry": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAKCAAABCwAABPwAAAMqAAACgwAAAQwAAAT7AAADKQAAAAAAAAAAB4AAAAKDAAABDAAABPsAAAMp"
+  },
+  "library_usage_stats": {
+    "/home/samuel/Calibre Library": 5,
+    "/home/samuel/calibre-library": 5
+  },
+  "manage_authors_dialog_geometry": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAQYAAAAhAAABx8AAAIFAAAEGAAAAIQAAAcfAAACBQAAAAAAAAAAB4AAAAQYAAAAhAAABx8AAAIF"
+  },
+  "manage_authors_table_widths": [
+    240,
+    240,
+    240
+  ],
+  "memory_view books view state": {
+    "column_alignment": {
+      "size": "center",
+      "timestamp": "center"
+    },
+    "column_positions": {
+      "authors": 2,
+      "collections": 5,
+      "inlibrary": 0,
+      "size": 4,
+      "timestamp": 3,
+      "title": 1
+    },
+    "column_sizes": {
+      "authors": 92,
+      "collections": 92,
+      "inlibrary": 92,
+      "size": 92,
+      "timestamp": 104,
+      "title": 187
+    },
+    "hidden_columns": [],
+    "languages_injected": true,
+    "last_modified_injected": true,
+    "sort_history": [
+      [
+        "timestamp",
+        false
+      ]
+    ]
+  },
+  "metadata-download-identify-widget-splitter-state": {
+    "__class__": "bytearray",
+    "__value__": "AAAA/wAAAAEAAAACAAACAAAAAQAA/////wEAAAABAA=="
+  },
+  "metadata_single_gui_geom": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAP0AAAAGgAAB2EAAAMLAAAD9AAAABoAAAdhAAADCwAAAAAAAAAAB4AAAAP0AAAAGgAAB2EAAAML"
+  },
+  "metasingle_window_geometry3": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAPGAAAAGgAAB50AAANIAAADxgAAABoAAAedAAADSAAAAAAAAAAAB4AAAAPGAAAAGgAAB50AAANI"
+  },
+  "preferences dialog geometry": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAHtAAAAsgAABZAAAAODAAAB7gAAALMAAAWPAAADggAAAAAAAAAAB4AAAAHuAAAAswAABY8AAAOC"
+  },
+  "previous_sort_order_BooksView": {
+    "ondevice": false,
+    "size": true
+  },
+  "quick_start_guide_added": true,
+  "quickview visible": false,
+  "recently_used_languages": [
+    "English"
+  ],
+  "replace_scene_breaks_history": [
+    "",
+    "<hr />",
+    "∗ ∗ ∗",
+    "• • •",
+    "♦ ♦ ♦",
+    "† †",
+    "‡ ‡ ‡",
+    "∞ ∞ ∞",
+    "¤ ¤ ¤"
+  ],
+  "search bar visible": true,
+  "tag browser search box visible": false,
+  "tag_browser_splitter_horizontal_state": [
+    true,
+    200
+  ]
+}

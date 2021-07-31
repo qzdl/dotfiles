@@ -1,0 +1,42 @@
+{
+  "Export catalog folder": "/home/samuel/calibre-library",
+  "add books dialog dir": "/home/samuel/calibre-library",
+  "catalog_add_to_library": true,
+  "catalog_last_used_title": "My books",
+  "catalog_preferred_format": "CSV",
+  "catalog_sync_to_device": true,
+  "catalog_window_geom": {
+    "__class__": "bytearray",
+    "__value__": "AdnQywADAAAAAAA9AAAAAQAAB3oAAAQcAAAAPQAAAAEAAAd6AAAEHAAAAAAAAAAAB4AAAAA9AAAAAQAAB3oAAAQc"
+  },
+  "catalogs_to_be_synced": {
+    "__class__": "set",
+    "__value__": []
+  },
+  "choose library location": "/home/samuel/calibre-library",
+  "notified-version-updates": {
+    "__class__": "set",
+    "__value__": [
+      "4.11",
+      "5.23"
+    ]
+  },
+  "recursive book import root dir dialog": "/home/samuel/Calibre Library/papers",
+  "save to disk dialog": "/home/samuel/pi/documents",
+  "sort_history": [
+    [
+      "size",
+      true
+    ],
+    [
+      "timestamp",
+      false
+    ],
+    [
+      "timestamp",
+      false
+    ]
+  ],
+  "welcome_wizard_device": "kindle",
+  "welcome_wizard_was_run": true
+}

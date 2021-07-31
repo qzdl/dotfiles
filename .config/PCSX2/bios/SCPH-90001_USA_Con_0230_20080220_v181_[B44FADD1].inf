@@ -1,0 +1,34 @@
+[EE]
+CPUrev=0x2E43
+FPUrev=0x2E40
+BOARDid=0xFFFF
+VU0MEMsize=4KB;4KB (*)
+VU1MEMsize=16KB;16KB (*)
+GSrev=0x551F
+GSMEMsize=4MB (*)
+ICache=16KB
+Dcache=8KB
+MEMsize=32MB
+
+[IOP]
+CPUrev=0x0030
+ICache=4KB (*)
+Dcache=1KB (*)
+MEMsize=2MB
+BOARDinf=0xFF
+SPU2rev=0x08
+SPU2MEMsize=2M (*)
+CDVDmecha=0x01060C00
+CDVDmeka=0x00
+DEV9rev=0x0031
+SPDrev=0x13 (unknown)
+SPDcaps=0x03 (eth+ata)
+SPDmac=00:1F:A7:BF:4D:AB
+USBhcrev=0x00000010
+iLinkports=2
+iLinkspeed=400
+iLinkvendor=0x------
+iLinkdevice=0x------
+iLinkSGUID=0x--------
+
+(*) values are not detected

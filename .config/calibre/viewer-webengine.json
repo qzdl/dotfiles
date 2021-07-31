@@ -1,0 +1,29 @@
+{
+  "old_prefs_migrated": true, 
+  "session_data": {
+    "book_scrollbar": false, 
+    "controls_help_shown_count": 1, 
+    "footer": {
+      "right": "progress"
+    }, 
+    "header": {}, 
+    "standalone_font_settings": {}, 
+    "standalone_misc_settings": {
+      "remember_last_read": true, 
+      "remember_window_geometry": false, 
+      "save_annotations_in_ebook": true, 
+      "singleinstance": false
+    }, 
+    "standalone_recently_opened": [
+      {
+        "authors": [
+          "Bertrand Russell"
+        ], 
+        "key": "/home/samuel/Calibre Library/Bertrand Russell/The Conquest Of Happiness (3)/The Conquest Of Happiness - Bertrand Russell.mobi", 
+        "pathtoebook": "/home/samuel/Calibre Library/Bertrand Russell/The Conquest Of Happiness (3)/The Conquest Of Happiness - Bertrand Russell.mobi", 
+        "timestamp": "2020-02-13T19:06:03.485Z", 
+        "title": "The Conquest Of Happiness"
+      }
+    ]
+  }
+}
