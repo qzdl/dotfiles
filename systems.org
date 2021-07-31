@@ -1,0 +1,411 @@
+:PROPERTIES:
+:ID:       53b915d9-5347-4878-832c-713a45b5be75
+:END:
+#+title: system configuration
+#+PROPERTY: header-args    :tangle-mode (identity #o444)
+#+PROPERTY: header-args:sh :tangle-mode (identity #o555)
+
+[[id:2e1b78ef-de6f-4af9-8a89-5d5ffe12a3ba][My]] system configurations for [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], compiled by [[id:953e0494-76b3-4ab7-bfe6-944e178b59dd][GNU Emacs]], deployed by [[id:884406e4-0851-4dc3-a6d3-cfe1c9fa1b2b][GNU
+Stow]].
+
+linked to dotfiles
+#+begin_src bash
+# ln -s ~/dotfiles/systems.org ~/life/roam/system_configuration.org
+mkdir -p .config/guix/systems/
+#+end_src
+
+#+RESULTS:
+
+involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]], [[id:5f896cd4-d7b8-44d2-a40d-ccdae1b80c33][programming]], and rice.
+
+inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
+
+* configuration
+** systems
+**** explanation
+with a simple separation of concerns, in attempts to eliminate redundancy:
+- base; minimum common denominators    (vc, emacs, networking, vpn, ssh, ...)
+- minimal; for a small board (pi, ...) (base, specific things, ...)
+- clean; for regular use               (base, X11, web browser, ...)
+
+created using modules, as described:
+- [[https://www.gnu.org/software/guile/manual/html_node/Modules.html#Modules][Modules (Guile Reference Manual)]]
+- [[https://guix.gnu.org/en/manual/en/html_node/Package-Modules.html#Package-Modules][Package Modules (GNU Guix Reference Manual)]]
+- [[https://guix.gnu.org/en/manual/en/html_node/Defining-Packages.html#Defining-Packages][Defining Packages (GNU Guix Reference Manual)]]
+- I am yet to understand how ~module~ relates to ~define[-public]~, and how ~packages~
+  relate to ~modules~.
+  - will #:use-module (gnu packages emacs) install a package ~emacs~? or make the build/sub available?
+  - how can i build packages for an installation?
+  - how does a manifest relate to [ module(gnu package emacs)-> packages(emacs-no-x-toolkite) || manifest emacs-no-x-toolkit@28.1 ] ?
+
+**** base-system;    .config/guix/systems/base-system.scm :file:
+:PROPERTIES:
+:ID:       61f53bfc-e34f-42ac-9dea-6f5e57f9a056
+:ROAM_ALIASES: "guix base system"
+:END:
+***** base-system
+#+begin_src scheme :tangle .config/guix/systems/base-system.scm
+(define-module (base-system)
+  #:use-module (gnu)
+  #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
+  #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
+  #:use-module (gnu services docker)
+  #:use-module (gnu services networking)
+  #:use-module (gnu packages vim)
+  #:use-module (gnu packages emacs)
+  #:use-module (gnu packages linux)
+  #:use-module (gnu packages version-control)
+  #:use-module (gnu packages package-management)
+  #:use-module (nongnu packages linux)
+  #:use-module (nongnu system linux-initrd))
+#+end_src
+***** base-service-modules
+#+begin_src scheme :tangle .config/guix/systems/base-system.scm
+(use-package-modules certs)
+(use-package-modules shells)
+
+#+end_src
+***** base-operating-system
+:: [[https://guix.gnu.org/en/manual/en/html_node/operating_002dsystem-Reference.html#operating_002dsystem-Reference][operating-system Reference (GNU Guix Reference Manual)]]
+:: [[https://guix.gnu.org/en/manual/en/html_node/Using-the-Configuration-System.html][Using the Configuration System (GNU Guix Reference Manual)]]
+
+timezone[fn:1], locale[fn:2], default hostname etc
+
+initrd[fn:3] 'inital ram disk'; for the bootloader to invoke ram
+:: [[https://guix.gnu.org/en/manual/en/html_node/Initial-RAM-Disk.html][Initial RAM Disk (GNU Guix Reference Manual)]]
+- the kernel loads 'compiled-in' drivers
+- temporary filesystem
+- init script
+  - to load 'additional modules' (for the kernel)
+    - ~operating-system -> initrd-modules~ in guix
+
+based on our initrd config, we can even 'boot-to-Guile' with the ~--repl~ flag, to land in a repl in the initial ram disk. wild. [fn:5]
+
+we are instructing initrd to populate with proprietary microcode[fn:4] ("ucode")
+for processors.
+
+I'm not happy about this blob usage AT ALL, but it's the cost of using non-free
+hardware. exercise limited trust in these machines.
+
+if running on a removable drive, it may be worth adding both amd
+and intel ucode images to the bootloader config in initrd.
+
+:: [[https://guix.gnu.org/en/manual/en/html_node/Keyboard-Layout.html][Keyboard Layout (GNU Guix Reference Manual)]]
+- 'model' comes from ~share/X11/xkb~ of package ~xkeyboard-config~
+#+begin_src scheme :tangle .config/guix/systems/base-system.scm
+(define-public base-operating-system
+  (operating-system
+   (host-name "unconf")
+   (timezone "Europe/Berlin")
+   (locale "en_US.UTF-8")
+
+   ;; nonfree kernel
+   (kernel linux)
+   (firmware (list linux-firmware))
+   (initrd microcode-initrd)
+
+   ;; disable ipv6 for safe vpn usage; we just aren't there yet :/
+   (kernel-arguments '("quiet" "ipv6.disable=1"))
+
+   ;; kernel layout, not necessarily X layout
+   (keyboard-layout (keyboard-layout "us" "altgr-intl" #:model "thinkpad"))
+
+   ;; UEFI+GRUB
+   (bootloader (bootloader-configuration
+                (bootloader grub-efi-bootloader)
+                (target "/boot/efi")
+                (keyboard-layout keyboard-layout)))
+
+   ;; base user
+   (users (cons (user-account
+                 (name "samuel")
+                 (comment "it me")
+                 (group "users")
+                 (home-directory "/home/samuel/")
+                 (supplementary-groups '("wheel"
+                                         "netdev"
+                                         "kvm"
+                                         "tty"
+                                         "input"
+                                         "docker")))
+                %base-user-accounts))
+
+   ;; OVERWRITE THIS WHEN INHERITING
+   ;;   AN ARTIFACT OF INCIDENTAL COMPLEXITY IN GUIX
+   (file-systems (cons*
+                  (file-system
+                   (mount-point "/tmp")
+                   (device "none")
+                   (type "tmpfs")
+                   (check? #f))
+                  %base-file-systems)
+
+   (packages (append (list
+                      git
+                      stow
+                      emacs
+                      vim
+                      openvpn
+                      nss-certs
+
+
+                      ;; fs utils
+                      gvfs
+                      fuse-exfat
+                      exfat-utils)
+                     %base-packages))
+
+
+
+   ;; Use the "desktop" services, which include the X11 log-in service,
+   ;; networking with NetworkManager, and more
+   (services (append (list (service docker-service-type)
+                           (extra-special-file "/usr/bin/env"
+                                               (file-append coreutils "/bin/env"))
+                           (service thermald-service-type))
+                     %base-services))) ;; TODO INSPECT %base-services
+#+end_src
+
+**** tiny-system;    .config/guix/systems/tiny-system.scm :file:
+:PROPERTIES:
+:ID:       2c540af7-a823-4ce8-b8ea-eee0372749bc
+:ROAM_ALIASES: "guix tiny system"
+:END:
+
+consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
+**** minimal-system; .config/guix/systems/minimal-system.scm :file:
+:PROPERTIES:
+:ID:       1134d479-ddd6-4963-a001-aa84f471db49
+:ROAM_ALIASES: "guix minimal system"
+:END:
+things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
+***** minimal-system
+#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
+(define-module minimal-system
+  #:use-module (gnu services pm)             ;; clipboard menu
+  #:use-module (gnu services cups)           ;; printing
+  #:use-module (gnu services desktop)        ;; desktop services (blote)
+  #:use-module (gnu services virtualization) ;; VMs
+  #:use-module (gnu packages xorg)           ;; graphical display
+  #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
+  #:use-module (gnu packages audio)          ;;
+  #:use-module (gnu packages pulseaudio)     ;; audio daemon
+  #:use-module (gnu packages wm)             ;; lots of wm options (blote)
+  #:use-module (gnu packages cups)           ;; printing
+  #:use-module (gnu packages mtools)         ;; interact with ms disks
+  #:use-module (gnu packages gtk)            ;; gnome stuff  (blote)
+  #:use-module (gnu packages web-browsers))  ;; web browsers (blote)
+#+end_src
+***** minimal-service-modules
+#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
+(use-service-modules desktop xorg)
+#+end_src
+***** minimal-operating-system
+- [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
+#+begin_src scheme :tangle .config/guix/systems/clean-system.scm
+(define-public minimal-operating-system
+  (operating-system
+   (inherit base-operating-system)
+
+   (services (cons* ;; virtualisation
+                    (service libvirt-service-type
+                             (libvirt-configuration
+                              (unix-sock-group "libvirt")
+                              (tls-port "16555")))
+                    ;; bluetooth
+                    (bluetooth-service #:auto-enable? #t))
+                    ;; X11
+                    (service slim-service-type
+                             (slim-configuration
+                              (xorg-configuration
+                               (xorg-configuration
+                                (keyboard-layout keyboard-layout)
+                                (extra-config (list %xorg-libinput-config)))))))
+
+   (packages
+    (append (list pulseaudio
+                  bluez
+                  bluez-alsa
+                  tlp
+                  ;;
+                  fx86-input-libinput
+                  ;; wms
+                  dmenu emacs-exwm emacs-desktop-environment)
+            (operating-system-packages base-operating-system)))))
+#+end_src
+
+***** additional configs
+****** udev-rule-backlight
+#+begin_src scheme :tangle .config/guix/systems/clean-system.scm
+;; Allow members of the "video" group to change the screen brightness.
+(define %udev-rule-backlight
+  (udev-rule
+   "90-backlight.rules"
+   (string-append "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chgrp video /sys/class/backlight/%k/brightness\""
+                  "\n"
+                  "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
+
+#+end_src
+
+#+RESULTS:
+****** xorg-libinput
+just a better control surface
+#+begin_src scheme :tangle .config/guix/systems/clean-system.scm
+(define %xorg-libinput-config
+  "Section \"InputClass\"
+  Identifier \"Touchpads\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsTouchpad \"on\"
+
+  Option \"Tapping\" \"on\"
+  Option \"TappingDrag\" \"on\"
+  Option \"DisableWhileTyping\" \"on\"
+  Option \"MiddleEmulation\" \"on\"
+  Option \"ScrollMethod\" \"twofinger\"
+  Option \"Natural Scrolling\" \"on\"
+EndSection
+Section \"InputClass\"
+  Identifier \"Keyboards\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsKeyboard \"on\"
+EndSection
+")
+#+end_src
+****** desktop services; power, udev, vpn
+#+begin_src scheme :tangle .config/guix/systems/clean-system.scm
+(define %my-desktop-services
+  (modify-services %desktop-services
+   (elogind-service-type
+    config => (elogind-configuration (inherit config)
+                           (handle-lid-switch-external-power 'suspend)))
+   (udev-service-type
+    config => (udev-configuration (inherit config)
+                                  (rules (cons %backlight-udev-rule
+                                               (udev-configuration-rules config)))))
+   (network-manager-service-type
+    config => (network-manager-configuration (inherit config)
+                                             (vpn-plugins (list     network-manager-openvpn))))))
+#+end_src
+
+** devices
+*** qzdl :@home:
+consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
+*** donutrust :@work:
+*** cleanpi
+
+** installation image
+:: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
+
+*** .config/guix/systems/install.scm
+#+begin_src scheme :tangle .config/guix/systems/install.scm
+;;; Copyright © 2019 Alex Griffin <a@ajgrf.com>
+;;; Copyright © 2019 Pierre Neidhardt <mail@ambrevar.xyz>
+;;;
+;;; This program is free software: you can redistribute it and/or modify
+
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;; Generate a bootable image (e.g. for USB sticks, etc.) with:
+;; <exec-shell-cmd "guix system disk-image nongnu/system/install.scm">
+
+(define-module (nongnu system install)
+  #:use-module (gnu system)
+  #:use-module (gnu system install)
+  #:use-module (nongnu packages linux)
+  #:use-module (base-system)
+  #:use-module (minimal-system)
+  #:use-module (tiny-system)
+  #:export (installation-os-nonfree))
+
+(define installation-os-nonfree
+  (operating-system
+    (inherit installation-os)
+    (kernel linux)
+    (firmware (list linux-firmware))
+    (kernel-arguments '("net.ifnames=0"))
+
+    (packages (append (list git curl stow vim emacs-no-x-toolkit)
+                      (operating-system-packages installation-os)
+                      (operating-system-packages base-operating-system)))
+
+installation-os-nonfree
+#+end_src
+
+** packages
+*** v4l2loopback-linux-module
+virtual video devices; hijack the webcam feed, or stream an application though loopback
+*** mtools :core:
+:: [[https://www.gnu.org/software/mtools/][Mtools - GNU Project - Free Software Foundation]]
+*** gnuzilla
+[[id:186a4daf-02ea-445b-9469-9909a5d7fb05][firefox]]
+
+** channels
+:: [[https://guix.gnu.org/en/manual/en/html_node/Channels.html#Channels][Channels (GNU Guix Reference Manual)]]
+- [[https://gitlab.com/nonguix/nonguix][Nonguix / nonguix · GitLab]]; nonfree linux-kernel for wifi drivers
+
+*** .config/guix/channels.scm :file:
+#+begin_src scheme :tangle .config/guix/channels.scm
+;; GENERATED BY ~/dotfiles/system.org
+(list
+ (channel
+  (name 'guix)
+  (url "https://git.savannah.gnu.org/git/guix.git"))
+ (channel
+  (name 'nonguix)
+  (url "https://gitlab.com/nonguix/nonguix")))
+#+end_src
+** emacs config as-a-package
+basically, to be able to update my emacs config with ~guix pull~
+* compilation
+** tangle-dotfiles.el
+#+begin_src emacs-lisp
+(require 'org)
+
+;; Don't ask when evaluating code blocks
+(setq-local org-confirm-babel-evaluate nil)
+
+(let* ((dotfiles-path (expand-file-name "~/dotfiles/"))
+       (org-files (directory-files dotfiles-path nil "\\.org$")))
+
+  (defun dw/tangle-org-file (org-file)
+    (message "\n\033[1;32mUpdating %s\033[0m\n" org-file)
+    (org-babel-tangle-file (expand-file-name org-file dotfiles-path)))
+
+  ;; Tangle Systems.org first
+  (dw/tangle-org-file "systems.org")
+
+  (dolist (org-file org-files)
+    (unless (member org-file '("README.org" "systems.org"))
+      (dw/tangle-org-file org-file))))
+
+;(list-directory "~/dotfiles/.config/guix")
+#+end_src
+
+#+RESULTS:
+
+* Footnotes
+[fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]
+[fn:4] [[https://wiki.archlinux.org/title/microcode][Microcode - ArchWiki]]
+
+[fn:3] [[https://www.kernel.org/doc/html/latest/admin-guide/initrd.html][Using the initial RAM disk (initrd) — The Linux Kernel documentation]]
+[fn:2] [[https://www.tecmint.com/set-system-locales-in-linux/][How to Change or Set System Locales in Linux]]
+- get: ~localectl~
+- set: ~sudo localectl set-blocale LANG=en_US.UTF_8~
+[fn:1] check the existing timezone with the following ([[https://www.tecmint.com/check-linux-timezone/][How to Check Timezone in Linux]])
+  #+begin_src bash
+  timedatectl | grep -i "time zone"
+  #+end_src

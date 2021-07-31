@@ -4,9 +4,10 @@ managed with stow
 ** deployment
 *** root
 #+begin_src bash
-cd ~/dotfiles/xorg
-sudo stow X11 -t /etc/
+cd ~/dotfiles/xorg && sudo stow etc -t /etc/
 #+end_src
+
+#+RESULTS:
 
 ** emacs
 ** vpnkillswitch
