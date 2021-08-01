@@ -22,9 +22,13 @@
   #:use-module (gnu system)
   #:use-module (gnu system install)
   #:use-module (nongnu packages linux)
-  #:use-module (base-system)
-  #:use-module (minimal-system)
-  #:use-module (tiny-system)
+  ;; #:use-module (base-system)
+  ;; #:use-module (tiny-system)
+  #:use-module (gnu packages version-control)
+  #:use-module (gnu packages vim)
+  #:use-module (gnu packages curl)
+  #:use-module (gnu packages emacs)
+  #:use-module (gnu packages package-management)
   #:export (installation-os-nonfree))
 
 (define installation-os-nonfree
@@ -35,7 +39,7 @@
     (kernel-arguments '("net.ifnames=0"))
 
     (packages (append (list git curl stow vim emacs-no-x-toolkit)
-                      (operating-system-packages installation-os)
-                      (operating-system-packages base-operating-system)))
+                      ;; (operating-system-packages base-operating-system)
+                      (operating-system-packages installation-os)))))
 
 installation-os-nonfree

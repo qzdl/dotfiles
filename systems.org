@@ -8,14 +8,6 @@
 [[id:2e1b78ef-de6f-4af9-8a89-5d5ffe12a3ba][My]] system configurations for [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], compiled by [[id:953e0494-76b3-4ab7-bfe6-944e178b59dd][GNU Emacs]], deployed by [[id:884406e4-0851-4dc3-a6d3-cfe1c9fa1b2b][GNU
 Stow]].
 
-linked to dotfiles
-#+begin_src bash
-# ln -s ~/dotfiles/systems.org ~/life/roam/system_configuration.org
-mkdir -p .config/guix/systems/
-#+end_src
-
-#+RESULTS:
-
 involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]], [[id:5f896cd4-d7b8-44d2-a40d-ccdae1b80c33][programming]], and rice.
 
 inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
@@ -326,9 +318,13 @@ consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
   #:use-module (gnu system)
   #:use-module (gnu system install)
   #:use-module (nongnu packages linux)
-  #:use-module (base-system)
-  #:use-module (minimal-system)
-  #:use-module (tiny-system)
+  ;; #:use-module (base-system)
+  ;; #:use-module (tiny-system)
+  #:use-module (gnu packages version-control)
+  #:use-module (gnu packages vim)
+  #:use-module (gnu packages curl)
+  #:use-module (gnu packages emacs)
+  #:use-module (gnu packages package-management)
   #:export (installation-os-nonfree))
 
 (define installation-os-nonfree
@@ -339,8 +335,8 @@ consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
     (kernel-arguments '("net.ifnames=0"))
 
     (packages (append (list git curl stow vim emacs-no-x-toolkit)
-                      (operating-system-packages installation-os)
-                      (operating-system-packages base-operating-system)))
+                      ;; (operating-system-packages base-operating-system)
+                      (operating-system-packages installation-os)))))
 
 installation-os-nonfree
 #+end_src
@@ -367,7 +363,7 @@ virtual video devices; hijack the webcam feed, or stream an application though l
  (channel
   (name 'nonguix)
   (url "https://gitlab.com/nonguix/nonguix")))
-#+end_src
+  #+end_src
 ** emacs config as-a-package
 basically, to be able to update my emacs config with ~guix pull~
 * compilation
@@ -392,7 +388,6 @@ basically, to be able to update my emacs config with ~guix pull~
     (unless (member org-file '("README.org" "systems.org"))
       (dw/tangle-org-file org-file))))
 
-;(list-directory "~/dotfiles/.config/guix")
 #+end_src
 
 #+RESULTS:
