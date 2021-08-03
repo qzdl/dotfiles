@@ -69,8 +69,6 @@
                       vim
                       openvpn
                       nss-certs
-
-
                       ;; fs utils
                       gvfs
                       fuse-exfat
