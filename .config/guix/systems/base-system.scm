@@ -49,7 +49,8 @@
                                          "kvm"
                                          "tty"
                                          "input"
-                                         "docker")))
+                                         ;"docker"
+                                         )))
                 %base-user-accounts))
 
    ;; OVERWRITE THIS WHEN INHERITING
@@ -60,27 +61,27 @@
                    (device "none")
                    (type "tmpfs")
                    (check? #f))
-                  %base-file-systems)
+                  %base-file-systems))
 
    (packages (append (list
                       git
                       stow
                       emacs
                       vim
-                      openvpn
+                      ;;openvpn
                       nss-certs
                       ;; fs utils
-                      gvfs
-                      fuse-exfat
-                      exfat-utils)
+                      ;;gvfs
+                      ;;fuse-exfat
+                      ;;exfat-utils
+                      )
                      %base-packages))
-
-
 
    ;; Use the "desktop" services, which include the X11 log-in service,
    ;; networking with NetworkManager, and more
    (services (append (list (service docker-service-type)
                            (extra-special-file "/usr/bin/env"
                                                (file-append coreutils "/bin/env"))
-                           (service thermald-service-type))
-                     %base-services))) ;; TODO INSPECT %base-services
+                           ;(service thermald-service-type)
+                           )
+                     %base-services)))) ;; TODO INSPECT %base-services

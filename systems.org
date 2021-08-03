@@ -119,7 +119,8 @@ and intel ucode images to the bootloader config in initrd.
                                          "kvm"
                                          "tty"
                                          "input"
-                                         "docker")))
+                                         ;"docker"
+                                         )))
                 %base-user-accounts))
 
    ;; OVERWRITE THIS WHEN INHERITING
@@ -130,30 +131,30 @@ and intel ucode images to the bootloader config in initrd.
                    (device "none")
                    (type "tmpfs")
                    (check? #f))
-                  %base-file-systems)
+                  %base-file-systems))
 
    (packages (append (list
                       git
                       stow
                       emacs
                       vim
-                      openvpn
+                      ;;openvpn
                       nss-certs
                       ;; fs utils
-                      gvfs
-                      fuse-exfat
-                      exfat-utils)
+                      ;;gvfs
+                      ;;fuse-exfat
+                      ;;exfat-utils
+                      )
                      %base-packages))
-
-
 
    ;; Use the "desktop" services, which include the X11 log-in service,
    ;; networking with NetworkManager, and more
    (services (append (list (service docker-service-type)
                            (extra-special-file "/usr/bin/env"
                                                (file-append coreutils "/bin/env"))
-                           (service thermald-service-type))
-                     %base-services))) ;; TODO INSPECT %base-services
+                           ;(service thermald-service-type)
+                           )
+                     %base-services)))) ;; TODO INSPECT %base-services
 #+end_src
 
 **** tiny-system;    .config/guix/systems/tiny-system.scm :file:
@@ -171,7 +172,7 @@ consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 ***** minimal-system
 #+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-(define-module minimal-system
+(define-module (minimal-system)
   #:use-module (base-system)
   #:use-module (gnu)
   #:use-module (gnu services pm)             ;; clipboard menu
@@ -192,42 +193,7 @@ things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056]
 #+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
 (use-service-modules desktop xorg)
 #+end_src
-***** minimal-operating-system
-- [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-(define-public minimal-operating-system
-  (operating-system
-   (inherit base-operating-system)
-
-   (services (cons* ;; virtualisation
-                    (service libvirt-service-type
-                             (libvirt-configuration
-                              (unix-sock-group "libvirt")
-                              (tls-port "16555")))
-                    ;; bluetooth
-                    (bluetooth-service #:auto-enable? #t))
-                    ;; X11
-                    (service slim-service-type
-                             (slim-configuration
-                              (xorg-configuration
-                               (xorg-configuration
-                                (keyboard-layout keyboard-layout)
-                                (extra-config (list %xorg-libinput-config)))))))
-
-
-   (packages
-    (append (list pulseaudio
-                  bluez
-                  bluez-alsa
-                  tlp
-                  ;;
-                  fx86-input-libinput
-                  ;; wms
-                  dmenu emacs-exwm emacs-desktop-environment)
-            (operating-system-packages base-operating-system)))))
-#+end_src
-
-***** additional configs
+***** rules & resources
 ****** udev-rule-backlight
 #+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
 ;; Allow members of the "video" group to change the screen brightness.
@@ -277,12 +243,47 @@ EndSection
                            (handle-lid-switch-external-power 'suspend)))
    (udev-service-type
     config => (udev-configuration (inherit config)
-                                  (rules (cons %backlight-udev-rule
+                                  (rules (cons %udev-rule-backlight
                                                (udev-configuration-rules config)))))
-   (network-manager-service-type
-    config => (network-manager-configuration (inherit config)
-                                             (vpn-plugins (list     network-manager-openvpn))))))
+   ;; (network-manager-service-type
+   ;;  config => (network-manager-configuration (inherit config)
+   ;;                                           (vpn-plugins (list     network-manager-openvpn))))
+  ))
 #+end_src
+
+***** minimal-operating-system
+- [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
+#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
+(define-public minimal-operating-system
+  (operating-system
+   (inherit base-operating-system)
+
+   (services (cons* ;; virtualisation
+                    (service libvirt-service-type
+                             (libvirt-configuration
+                              (unix-sock-group "libvirt")
+                              (tls-port "16555")))
+                    ;; bluetooth
+                    ;(bluetooth-service #:auto-enable? #t)
+                    ;; X11
+                    (set-xorg-configuration
+                     (xorg-configuration
+                      (keyboard-layout keyboard-layout)
+                      (extra-config (list %xorg-libinput-config))))
+                    %my-desktop-services))
+
+   (packages
+    (append (list pulseaudio)
+                  ;bluez
+                  ;bluez-alsa
+                  ;tlp
+                  ;;
+                  ;fx86-input-libinput
+                  ;; wms
+                  ;dmenu emacs-exwm emacs-desktop-environment
+            (operating-system-packages base-operating-system)))))
+#+end_src
+
 
 ** devices
 *** qzdl :@home:
@@ -305,9 +306,10 @@ my thinkpad x1 carbon; a work machine
          (source (uuid "c9042f21-04bd-48ff-9295-5e314f1d4b37"))
          (target "sys-root")
          (type luks-device-mapping))))
+
  (file-systems (cons*
                 (file-system
-                 (device (file-system-label "donutrust"))
+                 (device (file-system-label "sys-root"))
                  (mount-point "/")
                  (type "ext4")
                  (dependencies mapped-devices))
@@ -401,6 +403,8 @@ basically, to be able to update my emacs config with ~guix pull~
 #+begin_src emacs-lisp
 (require 'org)
 
+(defun qz/tangle-sys ()
+  (interactive)
 ;; Don't ask when evaluating code blocks
 (setq-local org-confirm-babel-evaluate nil)
 
@@ -416,8 +420,9 @@ basically, to be able to update my emacs config with ~guix pull~
 
   (dolist (org-file org-files)
     (unless (member org-file '("README.org" "systems.org"))
-      (dw/tangle-org-file org-file))))
+      (dw/tangle-org-file org-file)))))
 
+(qz/tangle-sys)
 #+end_src
 
 #+RESULTS:

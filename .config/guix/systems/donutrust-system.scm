@@ -13,9 +13,10 @@
          (source (uuid "c9042f21-04bd-48ff-9295-5e314f1d4b37"))
          (target "sys-root")
          (type luks-device-mapping))))
+
  (file-systems (cons*
                 (file-system
-                 (device (file-system-label "donutrust"))
+                 (device (file-system-label "sys-root"))
                  (mount-point "/")
                  (type "ext4")
                  (dependencies mapped-devices))
