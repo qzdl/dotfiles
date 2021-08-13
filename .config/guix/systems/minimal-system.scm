@@ -1,9 +1,11 @@
 (define-module (minimal-system)
   #:use-module (base-system)
   #:use-module (gnu)
+  #:use-module (srfi srfi-1)
   #:use-module (gnu services pm)             ;; clipboard menu
   #:use-module (gnu services cups)           ;; printing
   #:use-module (gnu services desktop)        ;; desktop services (blote)
+  #:use-module (gnu services docker)
   #:use-module (gnu services virtualization) ;; VMs
   #:use-module (gnu packages xorg)           ;; graphical display
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
@@ -72,14 +74,23 @@ EndSection
                              (libvirt-configuration
                               (unix-sock-group "libvirt")
                               (tls-port "16555")))
+                    (service docker-service-type)
                     ;; bluetooth
-                    ;(bluetooth-service #:auto-enable? #t)
+                    (bluetooth-service #:auto-enable? #t)
                     ;; X11
-                    (set-xorg-configuration
-                     (xorg-configuration
-                      (keyboard-layout keyboard-layout)
-                      (extra-config (list %xorg-libinput-config))))
-                    %my-desktop-services))
+                    ;; (service slim-service-type
+                    ;;    (slim-configuration
+                    ;;     (xorg-configuration
+                    ;;      (xorg-configuration
+                    ;;       (keyboard-layout
+                    ;;        (operating-system-keyboard-layout base-operating-system)
+                    ;;        (extra-config (list %xorg-libinput-config)))))))
+                    ;;
+                    ;;(operating-system-services base-operating-system)
+                    ;;
+                    (remove (lambda (service)
+                        (eq? (service-kind service) gdm-service-type))
+                     %my-desktop-services)))
 
    (packages
     (append (list pulseaudio)

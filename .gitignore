@@ -58,3 +58,9 @@ miniconda3/
 *PCSX2*log*
 *PCSX2/log*
 *qBittorrent/rss/
+*.org-jira/
+*history*
+*cookie*
+.local/share/nyxt/cookies.txt
+.local/share/nyxt/history/
+*PCSX2/bios/

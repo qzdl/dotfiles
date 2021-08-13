@@ -1,0 +1,1 @@
+emacs/.doom.d/start-exwm.sh

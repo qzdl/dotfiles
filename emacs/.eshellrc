@@ -1,7 +1,8 @@
-;; -*- emacs-lisp; lexical-binding: t; -*-
-
 alias sudo "eshell/sudo $*"
 
 ;; VC
 alias vc "vc-dir ." "Get some version control information for ./"
 alias g git
+
+GUIX_PROFILE="/home/samuel/.guix-profile"
+. "$GUIX_PROFILE/etc/profile"

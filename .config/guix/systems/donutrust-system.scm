@@ -2,11 +2,14 @@
 
 (define-module (donutrust)
  #:use-module (minimal-system)
- #:use-module (gnu))
+ #:use-module (gnu)
+ #:use-module (nongnu packages linux))
 
 (operating-system
  (inherit minimal-operating-system)
  (host-name "donutrust")
+
+ (firmware (list linux-firmware sof-firmware))
 
  (mapped-devices
   (list (mapped-device

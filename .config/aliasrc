@@ -1,30 +1,13 @@
-#!/bin/sh
-alias ka="killall" \
-    mpv="mpv --input-ipc-server=/tmp/mpvsoc$(date +%s)" \
-    calcurse="calcurse -D ~/.config/calcurse" \
-    magit="nvim -c Magit" \
-    p="sudo pacman" \
-    SS="sudo systemctl" \
-    f="vifm" \
-    g="git" \
-    trem="transmission-remote" \
-    e="$EDITOR" \
-    v="$EDITOR" \
-    x="sxiv -ft *" \
-    sdn="sudo shutdown -h now" \
-    gua="git remote | xargs -L1 git push --all" \
-    ls="ls -hN --color=auto --group-directories-first" \
-    grep="grep --color=auto" \
-    diff="diff --color=auto" \
-    ccat="highlight --out-format=ansi" \
-    yt="youtube-dl --add-metadata -i -o '%(upload_date)s-%(title)s.%(ext)s'" \
-    yta="yt -x -f bestaudio/best" \
-    YT="youtube-viewer" \
-    ref="shortcuts >/dev/null; source ~/.config/shortcutrc" \
-    upc="sudo pacman -Syu; pkill -RTMIN+8 i3blocks" \
-    lsp="pacman -Qett --color=always | less" \
-    ffmpeg="ffmpeg -hide_banner" \
-    xo="xdg-open"
+alias yt="youtube-dl --add-metadata -i -o '%(upload_date)s-%(title)s.%(ext)s'" \
+      yta="yt -x -f bestaudio/best" \
+      ls='ls -p --color=auto' \
+      ll='ls -lah' \
+      grep='grep --color=auto' \
+      g='guix' \
+      gg='git' \
+      h='sudo herd' \
+      res='source ~/.bashrc'
+      xo="xdg-open"
 
 shdl() { curl -O $(curl -s http://sci-hub.tw/"$@" | grep location.href | grep -o http.*pdf); }
 se() { du -a ~/.scripts/* ~/.config/* | awk '{print $2}' | fzf | xargs -r $EDITOR; }
