@@ -13,9 +13,9 @@ fi
 
 # Source the system-wide file.
 
-source /etc/bashrc
-source ./.config/aliasrc
-source ~/ns.sh # pyenv
+. /etc/bashrc
+. $HOME/.config/aliasrc
+. $HOME/ns.sh # pyenv
 
 # emacs-vterm display helper
 vterm_printf(){
@@ -50,6 +50,19 @@ else
     GUIX_ENV_PS1=''
 fi
 
-PS1="\n[\A] [\u : \h] [\w]$(echo -e '\U219D')"
-PS1="$PS1\n$GUIX_ENV_PS1$(echo -e '\U2234') "
+therefore="$(echo -e '\U2234')"
+arrow="$(echo -e '\U219D')"
+hammer="🔨"
+money="💰"
+spades="🂡"
+king="♚"
+dice="🎲"
+end=$money
+break=""
+
+    PS1="\n┏━❨\A❩━❨\u@\h❩━❨\w❩$break"
+PS1="$PS1\n┗━$GUIX_ENV_PS1$end "
+
 PS1=$PS1'\[$(vterm_prompt_end)\]'
+
+$HOME/.local/bin/unix

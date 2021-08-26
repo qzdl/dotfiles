@@ -1,4 +1,4 @@
-(define-module (base-system)
+(define-module (qzdl system base)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -10,12 +10,13 @@
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages package-management)
   #:use-module (nongnu packages linux)
-  #:use-module (nongnu system linux-initrd))
+  #:use-module (nongnu system linux-initrd)
+  #:export (base-operating-system))
 
 (use-package-modules certs)
 (use-package-modules shells)
 
-(define-public base-operating-system
+(define base-operating-system
   (operating-system
    (host-name "unconf")
    (timezone "Europe/Berlin")
@@ -44,13 +45,15 @@
                  (comment "it me")
                  (group "users")
                  (home-directory "/home/samuel/")
-                 (supplementary-groups '("wheel"
-                                         "netdev"
-                                         "kvm"
+                 (supplementary-groups '("wheel"     ;; sudo
+                                         "netdev"    ;; network devices
+                                         "kvm"       ;; virtualisation
                                          "tty"
                                          "input"
-                                         ;"docker"
-                                         )))
+                                         "lp"        ;; control bluetooth devices
+                                         "audio"     ;; control audio devices
+                                         "video"     ;; control video devices
+                                         "docker")))
                 %base-user-accounts))
 
    ;; OVERWRITE THIS WHEN INHERITING
@@ -66,7 +69,7 @@
    (packages (append (list
                       git
                       stow
-                      emacs
+                      emacs-pgtk-nativecomp
                       vim
                       ;;openvpn
                       nss-certs

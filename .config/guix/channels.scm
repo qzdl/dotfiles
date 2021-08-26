@@ -3,12 +3,25 @@
  (channel
   (name 'guix)
   (url "https://git.savannah.gnu.org/git/guix.git"))
+ ;; for the kernel + firmware
  (channel
   (name 'nonguix)
   (url "https://gitlab.com/nonguix/nonguix"))
+ ;; for emacs-libgccjit
+ (channel
+  (name 'flat)
+  (url "https://github.com/flatwhatson/guix-channel.git")
+  (commit
+   "86fb7253a4384b70c77739a0e03115be75d60ad1")
+  (introduction
+   (make-channel-introduction
+    "33f86a4b48205c0dc19d7c036c85393f0766f806"
+    (openpgp-fingerprint
+     "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
  ;; a great effort from infra hpc
  ;;(channel
  ;; (name 'guix-past)
+
  ;; (url "https://gitlab.inria.fr/guix-hpc/guix-past")
  ;; (introduction
  ;;  (make-channel-introduction

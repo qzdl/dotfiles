@@ -1,9 +1,10 @@
 :PROPERTIES:
 :ID:       53b915d9-5347-4878-832c-713a45b5be75
 :END:
-#+title: system configuration
+#+auto_tangle: yes
 #+PROPERTY: header-args    :tangle-mode (identity #o444)
 #+PROPERTY: header-args:sh :tangle-mode (identity #o555)
+#+title: system configuration
 
 [[id:2e1b78ef-de6f-4af9-8a89-5d5ffe12a3ba][My]] system configurations for [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], compiled by [[id:953e0494-76b3-4ab7-bfe6-944e178b59dd][GNU Emacs]], deployed by [[id:884406e4-0851-4dc3-a6d3-cfe1c9fa1b2b][GNU
 Stow]].
@@ -13,7 +14,177 @@ involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]]
 inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
 
 * configuration
-** systems
+** testing
+*** helpers
+#+begin_src bash :tangle test-helpers.sh
+headline() {
+  echo "============================"
+  echo $@
+  echo "============================"
+}
+
+block() {
+    echo "===$@"
+}
+
+delim() { echo && echo; }
+#+end_src
+*** test-system
+#+begin_src bash :tangle test-system.sh
+source test-helpers.sh
+
+MY_BASEPATH=$HOME/dotfiles
+GUIX_LOADPATH_MY="$MY_BASEPATH/guix"
+GUIX_LOADPATH_QZDL="$GUIX_LOADPATH_MY/qzdl"
+
+cd $MY_BASEPATH
+
+while getopts ":h" option; do
+    case $option in
+        h)
+            help
+            exit;;
+        l)
+            LINT=1 run_test
+            exit;;
+        \?) # unknown opt
+            echo "ERROR: unknown option"
+            exit 1;;
+    esac
+done
+help() {
+    echo "Test guix config"
+    echo
+    echo "usage: 'bash test-system.sh'"
+    echo "options: -[h|l]"
+    echo "h     print this help"
+    echo "l     lint $GUIX_LOADPATH_QZDL"
+
+}
+
+test-load-file() {
+    FILE=$1
+    (
+      echo "...TESTING $FILE"
+      echo "......LOADING 'GUIX REPL -L $GUIX_LOADPATH_MY $FILE'"
+      guix repl -L $GUIX_LOADPATH_MY $FILE \
+          && echo "......PASSED: $FILE"
+    )
+}
+
+run_test() {
+  headline "TESTING SYSTEM CONFIGURATION"
+
+  block "BEGIN: GUIX SYSTEM DESCRIBE"
+  guix system describe
+  block "END: GUIX SYSTEM DESCRIBE"
+  delim
+
+  block "BEGIN: GUIX LINT"
+  echo "...LINTING $GUIX_LOADPATH_QZDL"
+  guix lint -L $GUIX_LOADPATH_QZDL
+  block "END: GUIX LINT"
+  delim
+}
+#+end_src
+*** update and test
+#+begin_src bash :tangle update-dotfiles.sh
+source $HOME/dotfiles/test-helpers.sh
+cd $HOME/dotfiles
+
+headline "UPDATING DOTFILES"
+delim
+
+block "BEGIN: COMPILE DOTFILES"
+emacs -Q --batch --script $HOME/dotfiles/.doom.d/tangle-dotfiles.el
+block "END: COMPILE DOTFILES"
+delim
+
+block "BEGIN: STOW DOTFILES"
+stow .
+block "END: STOW DOTFILES"
+delim
+
+block "BEGIN: UPDATE EMACS INSTANCE"
+emacsclient \
+    -e '(load-file "~/dotfiles/.doom.d/per-system-settings.el")' \
+    -a "No emacs server running"
+block "END: UPDATE EMACS INSTANCE"
+delim
+
+
+bash $HOME/dotfiles/test-system.sh
+#+end_src
+*** compilation
+**** .doom.d/tangle-dotfiles.el
+#+begin_src emacs-lisp :tangle .doom.d/tangle-dotfiles.el
+(require 'org)
+
+(defun qz/tangle-sys ()
+  (interactive)
+;; Don't ask when evaluating code blocks
+(setq-local org-confirm-babel-evaluate nil)
+
+(let* ((dotfiles-path (expand-file-name "~/dotfiles/"))
+       (org-files (directory-files dotfiles-path nil "\\.org$")))
+
+  (defun dw/tangle-org-file (org-file)
+    (message "\n\033[1;32m...Updating %s\033[0m\n" org-file)
+    (org-babel-tangle-file (expand-file-name org-file dotfiles-path)))
+
+  ;; Tangle Systems.org first
+  (dw/tangle-org-file "systems.org")
+
+  (dolist (org-file org-files)
+    (unless (member org-file '("README.org" "systems.org"))
+      (dw/tangle-org-file org-file)))))
+
+(qz/tangle-sys)
+#+end_src
+
+*** debug
+**** tree
+#+begin_src bash :results drawer
+tree $HOME/dotfiles/.config/guix
+#+end_src
+
+#+RESULTS:
+:results:
+/home/samuel//dotfiles/.config/guix
+├── channels.scm
+├── current -> /var/guix/profiles/per-user/samuel/current-guix
+├── packages
+│   ├── fmt.scm
+│   ├── gofmt.scm
+│   ├── go-mvdan-sh.scm
+│   └── python-flake8-black.scm
+├── packages-python-3.6.4.scm
+├── python-3.6.4.scm
+├── qzdl
+│   ├── device
+│   │   └── donutrust.scm
+│   ├── packages
+│   │   └── go-mvdan-sh.scm
+│   ├── packages-python-3.6.4.scm
+│   ├── qzdl.scm
+│   ├── rules.scm
+│   ├── services.scm
+│   └── system
+│       ├── minimal.scm
+│       └── tiny.scm
+└── systems
+    ├── base-system.scm
+    ├── donutrust.scm
+    ├── donutrust-system.scm
+    ├── install.scm
+    ├── minimal-system.scm
+    └── services.scm
+
+7 directories, 21 files
+:end:
+
+
+** =(qzdl systems)=
 *** explanation
 with a simple separation of concerns, in attempts to eliminate redundancy:
 - base; minimum common denominators    (vc, emacs, networking, vpn, ssh, ...)
@@ -30,14 +201,16 @@ created using modules, as described:
   - how can i build packages for an installation?
   - how does a manifest relate to [ module(gnu package emacs)-> packages(emacs-no-x-toolkite) || manifest emacs-no-x-toolkit@28.1 ] ?
 
-*** base-system;    .config/guix/systems/base-system.scm :file:
+*** =(qzdl system base)= :file:
 :PROPERTIES:
 :ID:       61f53bfc-e34f-42ac-9dea-6f5e57f9a056
+:header-args: :tangle .config/guix/qzdl/system/base.scm
 :ROAM_ALIASES: "guix base system"
 :END:
-***** base-system
-#+begin_src scheme :tangle .config/guix/systems/base-system.scm
-(define-module (base-system)
+
+***** define
+#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
+(define-module (qzdl system base)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -49,13 +222,18 @@ created using modules, as described:
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages package-management)
   #:use-module (nongnu packages linux)
-  #:use-module (nongnu system linux-initrd))
+  #:use-module (nongnu system linux-initrd)
+  #:export (base-operating-system))
 #+end_src
-***** base-service-modules
-#+begin_src scheme :tangle .config/guix/systems/base-system.scm
+
+***** test
+#+begin_src bash :tangle test-system.sh
+test-load-file .config/guix/qzdl/system/base.scm
+#+end_src
+***** package modules
+#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
 (use-package-modules certs)
 (use-package-modules shells)
-
 #+end_src
 ***** base-operating-system
 :: [[https://guix.gnu.org/en/manual/en/html_node/operating_002dsystem-Reference.html#operating_002dsystem-Reference][operating-system Reference (GNU Guix Reference Manual)]]
@@ -84,8 +262,8 @@ and intel ucode images to the bootloader config in initrd.
 
 :: [[https://guix.gnu.org/en/manual/en/html_node/Keyboard-Layout.html][Keyboard Layout (GNU Guix Reference Manual)]]
 - 'model' comes from ~share/X11/xkb~ of package ~xkeyboard-config~
-#+begin_src scheme :tangle .config/guix/systems/base-system.scm
-(define-public base-operating-system
+#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
+(define base-operating-system
   (operating-system
    (host-name "unconf")
    (timezone "Europe/Berlin")
@@ -114,13 +292,15 @@ and intel ucode images to the bootloader config in initrd.
                  (comment "it me")
                  (group "users")
                  (home-directory "/home/samuel/")
-                 (supplementary-groups '("wheel"
-                                         "netdev"
-                                         "kvm"
+                 (supplementary-groups '("wheel"     ;; sudo
+                                         "netdev"    ;; network devices
+                                         "kvm"       ;; virtualisation
                                          "tty"
                                          "input"
-                                         ;"docker"
-                                         )))
+                                         "lp"        ;; control bluetooth devices
+                                         "audio"     ;; control audio devices
+                                         "video"     ;; control video devices
+                                         "docker")))
                 %base-user-accounts))
 
    ;; OVERWRITE THIS WHEN INHERITING
@@ -136,7 +316,7 @@ and intel ucode images to the bootloader config in initrd.
    (packages (append (list
                       git
                       stow
-                      emacs
+                      emacs-pgtk-nativecomp
                       vim
                       ;;openvpn
                       nss-certs
@@ -157,29 +337,39 @@ and intel ucode images to the bootloader config in initrd.
                      %base-services)))) ;; TODO INSPECT %base-services
 #+end_src
 
-*** tiny-system;    .config/guix/systems/tiny-system.scm :file:
+*** =(qzdl system tiny)=  :file:
 :PROPERTIES:
 :ID:       2c540af7-a823-4ce8-b8ea-eee0372749bc
+:header-args:  :tangle .config/guix/qzdl/system/tiny.scm
 :ROAM_ALIASES: "guix tiny system"
 :END:
-
+:: .config/guix/qzdl/system/tiny.scm
 consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
-*** minimal-system; .config/guix/systems/minimal-system.scm :file:
+*** =(qzdl system minimal)= :file:
 :PROPERTIES:
 :ID:       1134d479-ddd6-4963-a001-aa84f471db49
+:header-args: :tangle .config/guix/qzdl/system/minimal.scm
 :ROAM_ALIASES: "guix minimal system"
 :END:
+
+:: .config/guix/qzdl/system/minimal.scm
 things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
-***** minimal-system
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-(define-module (minimal-system)
-  #:use-module (base-system)
+
+***** test
+#+begin_src bash :tangle test-system.sh
+test-load-file .config/guix/qzdl/system/minimal.scm
+#+end_src
+***** define
+#+begin_src scheme :tangle .config/guix/qzdl/system/minimal.scm
+(define-module (qzdl system minimal)
+  #:use-module (qzdl system base)
+  #:use-module (qzdl services)
   #:use-module (gnu)
   #:use-module (srfi srfi-1)
   #:use-module (gnu services pm)             ;; clipboard menu
   #:use-module (gnu services cups)           ;; printing
-  #:use-module (gnu services desktop)        ;; desktop services (blote)
   #:use-module (gnu services docker)
+  #:use-module (gnu services databases)
   #:use-module (gnu services virtualization) ;; VMs
   #:use-module (gnu packages xorg)           ;; graphical display
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
@@ -189,16 +379,177 @@ things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056]
   #:use-module (gnu packages cups)           ;; printing
   #:use-module (gnu packages mtools)         ;; interact with ms disks
   #:use-module (gnu packages gtk)            ;; gnome stuff  (blote)
-  #:use-module (gnu packages web-browsers))  ;; web browsers (blote)
+  #:use-module (gnu packages web-browsers)  ;; web browsers (blote)
+  #:export (minimal-operating-system))
 #+end_src
-***** minimal-service-modules
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
+***** services
+#+begin_src scheme :tangle .config/guix/qzdl/system/minimal.scm
 (use-service-modules desktop xorg)
 #+end_src
-***** rules & resources
-****** udev-rule-backlight
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-;; Allow members of the "video" group to change the screen brightness.
+***** operating-system
+- [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
+#+begin_src scheme :tangle .config/guix/qzdl/system/minimal.scm
+(define minimal-operating-system
+  (operating-system
+   (inherit base-operating-system)
+
+   (services (cons*
+              my-libvirt-service
+              my-bluetooth-service
+              my-docker-service
+              (operating-system-services base-operating-system)
+              %my-desktop-services))
+
+   (packages
+    (cons* pulseaudio
+           bluez
+           bluez-alsa
+           tlp                  ;; laptop power management
+           fx86-input-libinput
+           emacs
+           (operating-system-packages base-operating-system)))))
+#+end_src
+** modules
+*** =(qzdl)=
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/qzdl.scm
+:END:
+:: .config/guix/qzdl/qzdl.scm
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/qzdl.scm
+(define-module (qzdl)
+  #:export (my-name))
+
+(define my-name "Samuel Culpepper")
+#+end_src
+**** test
+#+begin_src bash :tangle test-system.sh
+test-load-file $HOME/dotfiles/.config/guix/qzdl/qzdl.scm
+#+end_src
+*** =(qzdl services)=
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/services.scm
+:END:
+:: .config/guix/qzdl/services.scm
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define-module (qzdl services)
+  #:use-module (gnu services)
+  #:use-module (gnu services databases)
+  #:use-module (gnu services desktop)
+  #:use-module (gnu services docker)
+  #:use-module (gnu services virtualization)
+  #:use-module (gnu services networking)
+  #:use-module (srfi srfi-1)             ;; provides remove
+  #:export (my-libvirt-service
+            my-docker-service
+            my-bluetooth-service
+            ;;my-xorg-service
+            ;;my-network-manager-service
+            ;;my-ssh-service
+            my-postgresql-service
+            my-postgresql-role-service
+            %my-desktop-services))
+#+end_src
+**** test
+#+begin_src bash :tangle test-system.sh
+test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
+#+end_src
+
+
+**** TODO xorg-service
+#+begin_src scheme .config/guix/qzdl/services.scm
+ ;; X11
+              ;; (service slim-service-type
+              ;;    (slim-configuration
+              ;;     (xorg-configuration
+              ;;      (xorg-configuration
+              ;;       (keyboard-layout
+              ;;        (operating-system-keyboard-layout base-operating-system)
+              ;;        (extra-config (list %xorg-libinput-config)))))))
+#+end_src
+**** TODO bluetooth-service
+users must be in the =lp= group
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-bluetooth-service
+  (bluetooth-service #:auto-enable? #t))
+#+end_src
+
+**** TODO postgresql-service
+:: https://guix.gnu.org/manual/en/html_node/Database-Services.html
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-postgresql-role-service
+  (service postgresql-role-service-type
+   (postgresql-role-configuration
+    (roles
+     (list (postgresql-role
+            (name "postgres")
+            (create-database? #t))
+           (postgresql-role
+            (name "samuel")
+            (create-database? #t)))))))
+
+(define my-postgresql-service
+  (service postgresql-service-type))
+#+end_src
+**** TODO network-manager-service w/ openvpn
+**** TODO sshd service
+**** TODO homelab services
+**** TODO virtualisation; libvert
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-libvirt-service
+  (service libvirt-service-type
+           (libvirt-configuration
+            (unix-sock-group "libvirt")
+            (tls-port "16555"))))
+#+end_src
+**** docker
+requires user & group
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-docker-service
+  (service docker-service-type))
+#+end_src
+**** TODO desktop
+should prolly split this out
+#+begin_src scheme  .config/guix/qzdl/services.scm
+(define %my-desktop-services
+  (remove
+   (lambda (s) (or (eq? s gdm-service-type)
+              (eq? s slim-service-type))))
+    (modify-services
+     %desktop-services
+       (elogind-service-type config =>
+                             (elogind-configuration (inherit config)
+                                                    (handle-lid-switch-external-power 'suspend)))
+       (udev-service-type config =>
+                          (udev-configuration (inherit config)
+                                              (rules (cons %backlight-udev-rule
+                                                           (udev-configuration-rules config)))))
+       (network-manager-service-type config =>
+                                   (network-manager-configuration (inherit config)
+                                                                  (vpn-plugins (list network-manager-openvpn))))))
+#+end_src
+*** =(qzdl rules)=
+#+PROPERTY header-args:scheme :tangle .config/guix/qzdl/rules.scm
+:: .config/guix/qzdl/rules.scm
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define-module (qzdl rules)
+  #:use-module (gnu services desktop)
+  #:use-module (gnu services base)
+  #:export (%udev-rule-backlight
+            %xorg-libinput-config))
+#+end_src
+**** test
+#+begin_src bash :tangle test-system.sh
+test-load-file .config/guix/qzdl/rules.scm
+#+end_src
+**** udev-rule-backlight
+allow members of the "video" group to change the screen brightness.
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
 (define %udev-rule-backlight
   (udev-rule
    "90-backlight.rules"
@@ -207,13 +558,12 @@ things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056]
                   "\n"
                   "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
                   "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
-
 #+end_src
 
 #+RESULTS:
-****** xorg-libinput
-just a better control surface
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
+**** xorg-libinput
+just a better laptop-trackpad control surface
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
 (define %xorg-libinput-config
   "Section \"InputClass\"
   Identifier \"Touchpads\"
@@ -236,88 +586,28 @@ Section \"InputClass\"
 EndSection
 ")
 #+end_src
-****** desktop services; power, udev, vpn
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-(define %my-desktop-services
-  (modify-services %desktop-services
-   (elogind-service-type
-    config => (elogind-configuration (inherit config)
-                           (handle-lid-switch-external-power 'suspend)))
-   (udev-service-type
-    config => (udev-configuration (inherit config)
-                                  (rules (cons %udev-rule-backlight
-                                               (udev-configuration-rules config)))))
-   ;; (network-manager-service-type
-   ;;  config => (network-manager-configuration (inherit config)
-   ;;                                           (vpn-plugins (list     network-manager-openvpn))))
-  ))
-#+end_src
-
-***** minimal-operating-system
-- [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
-#+begin_src scheme :tangle .config/guix/systems/minimal-system.scm
-(define-public minimal-operating-system
-  (operating-system
-   (inherit base-operating-system)
-
-   (services (cons* ;; virtualisation
-                    (service libvirt-service-type
-                             (libvirt-configuration
-                              (unix-sock-group "libvirt")
-                              (tls-port "16555")))
-                    (service docker-service-type)
-                    ;; bluetooth
-                    (bluetooth-service #:auto-enable? #t)
-                    ;; X11
-                    ;; (service slim-service-type
-                    ;;    (slim-configuration
-                    ;;     (xorg-configuration
-                    ;;      (xorg-configuration
-                    ;;       (keyboard-layout
-                    ;;        (operating-system-keyboard-layout base-operating-system)
-                    ;;        (extra-config (list %xorg-libinput-config)))))))
-                    ;;
-                    ;;(operating-system-services base-operating-system)
-                    ;;
-                    (remove (lambda (service)
-                        (eq? (service-kind service) gdm-service-type))
-                     %my-desktop-services)))
-
-   (packages
-    (append (list pulseaudio)
-                  ;bluez
-                  ;bluez-alsa
-                  ;tlp
-                  ;;
-                  ;fx86-input-libinput
-                  ;; wms
-                  ;dmenu emacs-exwm emacs-desktop-environment
-            (operating-system-packages base-operating-system)))))
-#+end_src
-***** TODO xorg service config
-***** TODO xorg screentearing config
-***** TODO fix error on (operating-system-services base-operating-system)
-
-** debugging
-guix repl -L ~/dotfiles/.config/guix/systems/
-
-** devices
-*** qzdl :@home:
+**** TODO xorg screentearing-rule
+*** =(qzdl packages)=
+** =(qzdl devices)=
+*** =(qzdl devices xps)= :@home:
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
-*** donutrust :@work:
+*** =(qzdl devices donutrust)= :@work:
+#+PROPERTY: header-args:scheme :tangle .config/guix/qzdl/device/donutrust.scm
 my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
-
-
-
-#+begin_src scheme :tangle .config/guix/systems/donutrust-system.scm
-;; GENERATED BY ~/dotfiles/systems.org
-
-(define-module (donutrust)
+**** define
+#+begin_src scheme
+(define-module (qzdl system donutrust)
  #:use-module (minimal-system)
  #:use-module (gnu)
  #:use-module (nongnu packages linux))
-
+#+end_src
+**** test
+#+begin_src bash
+test-load-file .config/guix/qzdl/system/donutrust.scm
+#+end_src
+**** operating system
+#+begin_src scheme
 (operating-system
  (inherit minimal-operating-system)
  (host-name "donutrust")
@@ -329,6 +619,17 @@ my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa8
          (source (uuid "c9042f21-04bd-48ff-9295-5e314f1d4b37"))
          (target "sys-root")
          (type luks-device-mapping))))
+
+ (services
+   (modify-services
+    (operating-system-services minimal-operating-system)
+    (postgresql-role-service-type
+     config => (postgresql-role-configuration
+                (inherit config)
+                (extensions (list (service-extension postgresql-role-service-type
+                    (const (postgresql-role
+                            (name "newstore")
+                            (create-database? #t))))))))))
 
  (file-systems (cons*
                 (file-system
@@ -342,20 +643,12 @@ my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa8
                  (type "vfat"))
                 %base-file-systems)))
 #+end_src
-*** reconf
-#+begin_src bash
-sudo -E guix system -L ~/.config/guix/systems reconfigure ~/.config/guix/systems/donutrust-system.scm
-#+end_src
-
-#+RESULTS:
-
-*** cleanpi
-
+*** =(qzdl devices cleanpi)= :@home:
 ** installation image
 :: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
 
-*** .config/guix/systems/install.scm
-#+begin_src scheme :tangle .config/guix/systems/install.scm
+*** .config/guix/qzdl/system/install.scm
+#+begin_src scheme :tangle .config/guix/qzdl/system/install.scm
 ;;; Copyright © 2019 Alex Griffin <a@ajgrf.com>
 ;;; Copyright © 2019 Pierre Neidhardt <mail@ambrevar.xyz>
 ;;;
@@ -403,8 +696,8 @@ sudo -E guix system -L ~/.config/guix/systems reconfigure ~/.config/guix/systems
 installation-os-nonfree
 #+end_src
 
-** packages
-:: .config/guix/packages
+** packages (qzdl packages)
+:: .config/guix/qzdl/packages
 *** v4l2loopback-linux-module
 virtual video devices; hijack the webcam feed, or stream an application though loopback
 *** mtools :core:
@@ -431,7 +724,7 @@ emacsclient -n --eval "(message \"${APPNAME}/${SUMMARY}: $BODY\")"
 *** gnuzilla
 [[id:186a4daf-02ea-445b-9469-9909a5d7fb05][firefox]]
 *** python-3.6.4
-#+begin_src scheme :tangle .config/guix/packages-python-3.6.4.scm
+#+begin_src scheme :tangle .config/guix/qzdl/packages-python-3.6.4.scm
 (define-public python-3.6
   (package (inherit python-2)
     (version "3.6.4")
@@ -539,7 +832,7 @@ emacsclient -n --eval "(message \"${APPNAME}/${SUMMARY}: $BODY\")"
 :: [[https://github.com/mvdan/sh][GitHub: mvdan/sh]]
 :: [[https://pkg.go.dev/mvdan.cc/sh/v3][sh · pkg.go.dev]]
 
-#+begin_src scheme :tangle .config/guix/packages/go-mvdan-sh.scm
+#+begin_src scheme :tangle .config/guix/qzdl/packages/go-mvdan-sh.scm
 ;; <2021-08-11 Wed 13:33> `guix import go mvdan.cc/sh'
 (use-modules (guix packages)
              (guix git-download)
@@ -587,15 +880,23 @@ alias yt="youtube-dl --add-metadata -i -o '%(upload_date)s-%(title)s.%(ext)s'" \
       ll='ls -lah' \
       grep='grep --color=auto' \
       g='guix' \
+      gp='echo $GUIX_PROFILE' \
       gg='git' \
       h='sudo herd' \
-      res='source ~/.bashrc'
-      xo="xdg-open"
+      res='source ~/.bashrc' \
+      xo='xdg-open' \
+      wa='cat $HOME/.config/aliasrc'
 
+# guix reconfigure, and debug to the repl
+gRd ()  { sudo -E guix repl -L "$HOME/.config/guix/qzdl";}
+gR ()  { sudo -E guix system -L "$HOME/.config/guix/qzdl" reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm"; }
+# guix profile commands; make it easy to switch and check
+gse()  { gsp "$GUIX_EXTRA_PROFILES/$@"; }
+gsp()  { export GUIX_PROFILE="$@"; . "$GUIX_PROFILE/etc/profile"; }
 shdl() { curl -O $(curl -s http://sci-hub.tw/"$@" | grep location.href | grep -o http.*pdf); }
-se() { du -a ~/.scripts/* ~/.config/* | awk '{print $2}' | fzf | xargs -r $EDITOR; }
-sv() { vcopy "$(du -a ~/.scripts/* ~/.config/* | awk '{print $2}' | fzf)"; }
-sb() { echo $1 | sudo tee /sys/class/backlight/intel_backlight/brightness; }
+se()   { du -a ~/.scripts/* ~/.config/* | awk '{print $2}' | fzf | xargs -r $EDITOR; }
+sv()   { vcopy "$(du -a ~/.scripts/* ~/.config/* | awk '{print $2}' | fzf)"; }
+sb()   { echo $1 | sudo tee /sys/class/backlight/intel_backlight/brightness; }
 #+end_src
 
 *** .bashrc :file:
@@ -625,9 +926,9 @@ fi
 #+begin_src bash :tangle .bashrc
 # Source the system-wide file.
 
-source /etc/bashrc
-source ./.config/aliasrc
-source ~/ns.sh # pyenv
+. /etc/bashrc
+. $HOME/.config/aliasrc
+. $HOME/ns.sh # pyenv
 #+end_src
 
 **** vterm
@@ -685,10 +986,94 @@ else
     GUIX_ENV_PS1=''
 fi
 
-PS1="\n[\A] [\u : \h] [\w]$(echo -e '\U219D')"
-PS1="$PS1\n$GUIX_ENV_PS1$(echo -e '\U2234') "
+therefore="$(echo -e '\U2234')"
+arrow="$(echo -e '\U219D')"
+hammer="🔨"
+money="💰"
+spades="🂡"
+king="♚"
+dice="🎲"
+end=$money
+break=""
+
+    PS1="\n┏━❨\A❩━❨\u@\h❩━❨\w❩$break"
+PS1="$PS1\n┗━$GUIX_ENV_PS1$end "
+
 PS1=$PS1'\[$(vterm_prompt_end)\]'
+
+$HOME/.local/bin/unix
 #+end_src
+**** TODO ascii
+***** clippy
+#+begin_src bash :tangle .local/bin/clippy :tangle-mode (identity #o755)
+echo "
+░░░░░░▄████▄
+░░░░░▐▌░░░░▐▌
+░░▄▀▀█▀░░░░▐▌
+░░▄░▐▄░░░░░▐▌▀▀▄
+▐▀░▄▄░▀▌░▄▀▀░▀▄░▀
+▐░▀██▀░▌▐░▄██▄░▌
+░▀▄░▄▄▀░▐░░▀▀░░▌
+░░░░█░░░░▀▄▄░▄▀
+░░░░█░█░░░░█░▐
+░░░░█░█░░░▐▌░█
+░░░░█░█░░░▐▌░█
+░░░░▐▌▐▌░░░█░█
+░░░░▐▌░█▄░▐▌░█
+░░░░░█░░▀▀▀░░▐▌
+░░░░░▐▌░░░░░░█
+░░░░░░█▄░░░░▄█
+░░░░░░░▀████▀"
+#+end_src
+
+#+RESULTS:
+|                   |
+| ░░░░░░▄████▄      |
+| ░░░░░▐▌░░░░▐▌     |
+| ░░▄▀▀█▀░░░░▐▌     |
+| ░░▄░▐▄░░░░░▐▌▀▀▄  |
+| ▐▀░▄▄░▀▌░▄▀▀░▀▄░▀ |
+| ▐░▀██▀░▌▐░▄██▄░▌  |
+| ░▀▄░▄▄▀░▐░░▀▀░░▌  |
+| ░░░░█░░░░▀▄▄░▄▀   |
+| ░░░░█░█░░░░█░▐    |
+| ░░░░█░█░░░▐▌░█    |
+| ░░░░█░█░░░▐▌░█    |
+| ░░░░▐▌▐▌░░░█░█    |
+| ░░░░▐▌░█▄░▐▌░█    |
+| ░░░░░█░░▀▀▀░░▐▌   |
+| ░░░░░▐▌░░░░░░█    |
+| ░░░░░░█▄░░░░▄█    |
+| ░░░░░░░▀████▀     |
+***** unix
+#+begin_src bash :tangle .local/bin/unix :tangle-mode (identity #o755)
+#!/bin/sh
+#original artwork by http://www.sanderfocus.nl/#/portfolio/tech-heroes
+#converted to shell by #nixers @ irc.unix.chat
+
+cat << 'eof'
+                     [38;5;255m,_ ,_==▄▂[0m
+                  [38;5;255m,  ▂▃▄▄▅▅[48;5;240m▅[48;5;20m▂[48;5;240m▅¾[0m.            [38;5;199m/    [38;5;20m/[0m
+                   [38;5;255m[48;5;20m▄[0m[38;5;255m[48;5;199m▆[38;5;16m[48;5;255m<´  [38;5;32m"[38;5;34m»[38;5;255m▓▓[48;5;32m▓[48;5;240m%[0m\       [38;5;199m/ [38;5;20m/   [38;5;45m/ [38;5;118m/[0m
+                 [38;5;255m,[38;5;255m[48;5;240m▅[38;5;16m[48;5;255m7"     [38;5;160m´[38;5;34m>[38;5;255m[48;5;39m▓▓[38;5;199m[48;5;255m▓[0m[38;5;255m%   [38;5;20m/  [38;5;118m/ [38;5;199m> [38;5;118m/ [38;5;199m>[38;5;255m/[38;5;45m%[0m
+                 [38;5;255m▐[48;5;240m[38;5;255m¶[48;5;240m[38;5;255m▓[48;5;255m       [38;5;196m,[38;5;34m»[48;5;201m[38;5;255m▓▓[0m[38;5;255m¾´[0m  [38;5;199m/[38;5;255m> %[38;5;199m/[38;5;118m%[38;5;255m/[38;5;199m/ [38;5;45m/  [38;5;199m/[0m
+                  [38;5;255m[48;5;240m▓[48;5;255m[38;5;16m▃[48;5;16m[38;5;255m▅▅[38;5;16m[48;5;255m▅▃,,[38;5;32m▄[38;5;16m▅[38;5;255m[48;5;16m▅▅[38;5;255m[48;5;20mÆ[0m[38;5;255m\[0m[38;5;20m/[38;5;118m/[38;5;255m /[38;5;118m/[38;5;199m/[38;5;255m>[38;5;45m// [38;5;255m/[38;5;118m>[38;5;199m/   [38;5;20m/[0m
+                 [48;5;20m[38;5;255mV[48;5;255m[38;5;16m║[48;5;20m[38;5;255m«[0m[38;5;255m¼.;[48;5;240m[38;5;255m→[48;5;255m[38;5;16m ║[0m[38;5;255m<«.,[48;5;25m[38;5;255m`[48;5;240m=[0m[38;5;20m/[38;5;199m/ [38;5;255m/>[38;5;45m/[38;5;118m/[38;5;255m%/[38;5;199m% / [38;5;20m/[0m
+               [38;5;20m//[48;5;255m[38;5;16m╠<´ -²,)[48;5;16m[38;5;255m(▓[48;5;255m[38;5;16m~"-[38;5;199m╝/[0m[38;5;255m¾[0m[38;5;199m/ [38;5;118m%[38;5;255m/[38;5;118m>[38;5;45m/ [38;5;118m/[38;5;199m>[0m
+           [38;5;20m/ / [38;5;118m/ [48;5;20m[38;5;255m▐[48;5;240m[38;5;16m%[48;5;255m -./▄▃▄[48;5;16m[38;5;255m▅[48;5;255m[38;5;16m▐[48;5;255m[38;5;16m, [38;5;199m/[48;5;199m[38;5;255m7[0m[38;5;20m/[38;5;199m/[38;5;255m;/[38;5;199m/[38;5;118m% [38;5;20m/ /[0m
+           [38;5;20m/ [38;5;199m/[38;5;255m/[38;5;45m/[38;5;118m/[38;5;255m[48;5;240m`[48;5;20m[38;5;255m▌[48;5;20m[38;5;255m▐[48;5;255m[38;5;16m %z[0m[38;5;255mWv xX[48;5;20m[38;5;255m▓[48;5;34m[38;5;255m▇[48;5;199m[38;255m▌[0m[38;5;20m/[38;5;199m/[38;5;255m&;[38;5;20m% [38;5;199m/ [38;5;20m/[0m
+       [38;5;20m/ / [38;5;255m/ [38;5;118m%[38;5;199m/[38;5;255m/%/[48;5;240m[38;5;255m¾[48;5;255m[38;5;16m½´[38;5;255m[48;5;16m▌[0m[38;5;246m▃▄[38;5;255m▄▄[38;5;246m▄▃▃[0m[48;5;16m[38;5;255m▐[38;5;255m[48;5;199m¶[48;5;20m[38;5;255m\[0m[38;5;20m/[0m[48;5;255m[38;5;240m&[0m [38;5;20m/[0m
+         [38;5;199m<[38;5;118m/ [38;5;45m/[38;5;255m</[38;5;118m%[38;5;255m/[38;5;45m/[38;5;255m`[48;5;16m▓[48;5;255m[38;5;16m![48;5;240m[38;5;255m%[48;5;16m[38;5;255m▓[0m[38;5;255m%[48;5;240m[38;5;255m╣[48;5;240m[38;5;255;╣[0m[38;5;255mW[0m[38;5;250mY<Y)[48;5;255m[38;5;16my&[0m[38;5;255m/`[48;5;240m\[0m
+     [38;5;20m/ [38;5;199m/ [38;5;199m%[38;5;255m/%[38;5;118m/[38;5;45m/[38;5;255m<[38;5;118m/[38;5;199m%[38;5;45m/[38;5;20m/[48;5;240m[38;5;255m\[38;5;16m[48;5;255mi7; ╠N[0m[38;5;246m>[38;5;255m)VY>[48;5;240m[38;5;255m7[0m[38;5;255m;  [38;5;255m[48;5;240m\[0m[38;5;255m_[0m    [38;5;255mUNIX IS VERY SIMPLE [38;5;45mIT JUST NEEDS A[0m
+  [38;5;20m/   [38;5;255m/[38;5;118m<[38;5;255m/ [38;5;45m/[38;5;255m/<[38;5;199m/[38;5;20m/[38;5;199m/[38;5;20m<[38;5;255m_/%\[38;5;255m[48;5;16m▓[48;5;255m[38;5;16m  V[0m[38;5;255m%[48;5;255m[38;5;16mW[0m[38;5;255m%£)XY[0m  [38;5;240m_/%[38;5;255m‾\_,[0m   [38;5;45mGENIUS TO UNDERSTAND ITS SIMPLICITY[38;5;255m[0m
+   [38;5;199m/ [38;5;255m/ [38;5;199m/[38;5;255m/[38;5;118m%[38;5;199m/[48;5;240m[38;5;255m_,=-[48;5;20m-^[0m[38;5;255m/%/%%[48;5;255m[38;5;16m\¾%[0m[38;5;255m¶[0m[48;5;255m[38;5;16m%[0m[38;5;255m%}[0m    [38;5;240m/%%%[38;5;20m%%[38;5;240m%;\,[0m
+    [38;5;45m%[38;5;20m/[38;5;199m< [38;5;20m/[48;5;20m[38;5;255m_/[48;5;240m [0m[38;5;255m%%%[38;5;240m%%[38;5;20m;[38;5;255mX[38;5;240m%[38;5;20m%[38;5;255m\%[38;5;240m%;,     _/%%%;[38;5;20m,[38;5;240m     \[0m
+   [38;5;118m/ [38;5;20m/ [38;5;240m%[38;5;20m%%%%[38;5;240m%;,    [38;5;255m\[38;5;240m%[38;5;20m%[38;5;255ml[38;5;240m%%;// _/[38;5;20m%;,[0m [38;5;234mdmr[0m
+ [38;5;20m/    [38;5;240m%[38;5;20m%%;,[0m         [38;5;255m<[38;5;20m;[38;5;240m\-=-/ /[0m
+     [38;5;20m;,[0m                [38;5;240ml[0m
+eof
+#+end_src
+
 
 ** channels
 :: [[https://guix.gnu.org/en/manual/en/html_node/Channels.html#Channels][Channels (GNU Guix Reference Manual)]]
@@ -701,12 +1086,25 @@ PS1=$PS1'\[$(vterm_prompt_end)\]'
  (channel
   (name 'guix)
   (url "https://git.savannah.gnu.org/git/guix.git"))
+ ;; for the kernel + firmware
  (channel
   (name 'nonguix)
   (url "https://gitlab.com/nonguix/nonguix"))
+ ;; for emacs-libgccjit
+ (channel
+  (name 'flat)
+  (url "https://github.com/flatwhatson/guix-channel.git")
+  (commit
+   "86fb7253a4384b70c77739a0e03115be75d60ad1")
+  (introduction
+   (make-channel-introduction
+    "33f86a4b48205c0dc19d7c036c85393f0766f806"
+    (openpgp-fingerprint
+     "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
  ;; a great effort from infra hpc
  ;;(channel
  ;; (name 'guix-past)
+
  ;; (url "https://gitlab.inria.fr/guix-hpc/guix-past")
  ;; (introduction
  ;;  (make-channel-introduction
@@ -717,8 +1115,10 @@ PS1=$PS1'\[$(vterm_prompt_end)\]'
   #+end_src
 
   #+RESULTS:
-** HACK inferiors
-#+begin_src scheme
+** HACK inferiors for python
+this does not work how I want; it will not install python from the revision of
+guix specified by the given commit sha
+#+begin_src scheme :tangle no
 (use-modules (guix inferior)
              (guix)
              (srfi srfi-1))
@@ -744,35 +1144,6 @@ basically, to be able to update my emacs config with ~guix pull~
 #+begin_src bash :tangle .emacs.d/docker-pyshell.sh
 docker run -it -v /tmp:/tmp -v $HOME/git ufoym/deepo python3
 #+end_src
-
-* compilation
-** tangle-dotfiles.el
-#+begin_src emacs-lisp :tangle .doom.d/tangle-dotfiles.el
-(require 'org)
-
-(defun qz/tangle-sys ()
-  (interactive)
-;; Don't ask when evaluating code blocks
-(setq-local org-confirm-babel-evaluate nil)
-
-(let* ((dotfiles-path (expand-file-name "~/dotfiles/"))
-       (org-files (directory-files dotfiles-path nil "\\.org$")))
-
-  (defun dw/tangle-org-file (org-file)
-    (message "\n\033[1;32mUpdating %s\033[0m\n" org-file)
-    (org-babel-tangle-file (expand-file-name org-file dotfiles-path)))
-
-  ;; Tangle Systems.org first
-  (dw/tangle-org-file "systems.org")
-
-  (dolist (org-file org-files)
-    (unless (member org-file '("README.org" "systems.org"))
-      (dw/tangle-org-file org-file)))))
-
-(qz/tangle-sys)
-#+end_src
-
-#+RESULTS:
 
 * Footnotes
 [fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]
