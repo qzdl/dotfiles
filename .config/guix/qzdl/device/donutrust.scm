@@ -7,22 +7,7 @@
              ;;        (operating-system-keyboard-layout base-operating-system)
              ;;        (extra-config (list %xorg-libinput-config)))))))
 
-(define %my-desktop-services
-  (remove
-   (lambda (s) (or (eq? s gdm-service-type)
-              (eq? s slim-service-type))))
-    (modify-services
-     %desktop-services
-       (elogind-service-type config =>
-                             (elogind-configuration (inherit config)
-                                                    (handle-lid-switch-external-power 'suspend)))
-       (udev-service-type config =>
-                          (udev-configuration (inherit config)
-                                              (rules (cons %backlight-udev-rule
-                                                           (udev-configuration-rules config)))))
-       (network-manager-service-type config =>
-                                   (network-manager-configuration (inherit config)
-                                                                  (vpn-plugins (list network-manager-openvpn))))))
+
 
 (define-module (qzdl system donutrust)
  #:use-module (minimal-system)

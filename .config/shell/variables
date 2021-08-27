@@ -1,0 +1,46 @@
+export CONFIG_DIR="$HOME/.config"
+export CONFIG_DIR_SHELL="$CONFIG_DIR/shell"
+
+export QZ_ALIASES="$CONFIG_DIR_SHELL/aliases"
+export QZ_FUNCTIONS="$CONFIG_DIR_SHELL/functions"
+export QZ_VARIABLES="$CONFIG_DIR_SHELL/variables"
+
+export VC_DIR="$HOME/git"
+export EMACS_DIR="$HOME/.doom.d"
+
+# recoll indexer var -> set in recoll config, and web extension too
+export webdownloadsdir="$HOME/Downloads/recoll"
+
+export EDITOR='emacsclient -c -a emacs'
+export TERMINAL='emacsclient -c -e "(vterm)" -a emacs -e "(vterm)"'
+export BROWSER='firefox'
+
+# fix ~/ carnage
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_DIRS="$HOME/.guix-profile/share${XDG_DATA_DIRS:+:}$XDG_DATA_DIRS"
+export XDG_CACHE_HOME="$HOME/.cache"
+export GIO_EXTRA_MODULES="$HOME/.guix-profile/lib/gio/modules${GIO_EXTRA_MODULES:+:}$GIO_EXTRA_MODULES"
+export WGETRC="${XDG_CONFIG_HOME:-$HOME/.config}/wget/wgetrc"
+export INPUTRC="${XDG_CONFIG_HOME:-$HOME/.config}/shell/inputrc"
+
+export SUDO_ASKPASS='dmenu'
+
+export GUIX_EXTRA_PROFILES="$HOME/.guix-extra-profiles"
+export GUIX_PROFILE="$HOME/.guix-profile"
+
+export PATH="$HOME/.local/bin/:$PATH"
+export FPATH="$CONFIG_DIR_SHELL:$FPATH"
+
+# https://techstop.github.io/bash-script-colors/
+export qz_red="\e[0;91m"
+export qz_blue="\e[0;94m"
+export qz_expand_bg="\e[K"
+export qz_blue_bg="\e[0;104m${qz/expand_bg}"
+export qz_red_bg="\e[0;101m${qz/expand_bg}"
+export qz_green_bg="\e[0;102m${qz/expand_bg}"
+export qz_green="\e[0;92m"
+export qz_greener="\033[1;32m"
+export qz_white="\e[0;97m"
+export qz_bold="\e[1m"
+export qz_uline='\e[4m'
+export qz_reset='\e[0m'

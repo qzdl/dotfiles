@@ -64,3 +64,4 @@ miniconda3/
 .local/share/nyxt/cookies.txt
 .local/share/nyxt/history/
 *PCSX2/bios/
+*virtualenv/

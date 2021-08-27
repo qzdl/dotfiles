@@ -2,6 +2,7 @@
   #:use-module (qzdl system base)
   #:use-module (qzdl services)
   #:use-module (gnu)
+  #:use-module (gnu system)
   #:use-module (srfi srfi-1)
   #:use-module (gnu services pm)             ;; clipboard menu
   #:use-module (gnu services cups)           ;; printing
@@ -29,8 +30,8 @@
               my-libvirt-service
               my-bluetooth-service
               my-docker-service
-              (operating-system-services base-operating-system)
-              %my-desktop-services))
+              %my-desktop-services
+              (operating-system-services base-operating-system)))
 
    (packages
     (cons* pulseaudio

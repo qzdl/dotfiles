@@ -1,0 +1,14 @@
+source $HOME/.config/shell/variables
+
+if [ -f ~/.bashrc ]; then . ~/.bashrc; fi
+
+for f in functions aliases variables ; do
+    . "$CONFIG_DIR_SHELL/$f";
+done;
+
+. $GUIX_PROFILE/etc/profile
+
+export $(cat $HOME/.config/shell/variables | grep -v "^#" | cut -d= -f1)
+export $(cat $HOME/.config/shell/aliases | grep  -v "#" | grep -v 'alias' | cut -d'=' -f1)
+export -f $(cat $HOME/.config/shell/functions | grep  -i "^[a-z]\(\)" | cut -d'(' -f1)
+export alias rrp="source $HOME/.profile"

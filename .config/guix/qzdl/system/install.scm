@@ -22,8 +22,6 @@
   #:use-module (gnu system)
   #:use-module (gnu system install)
   #:use-module (nongnu packages linux)
-  ;; #:use-module (base-system)
-  ;; #:use-module (tiny-system)
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages vim)
   #:use-module (gnu packages curl)

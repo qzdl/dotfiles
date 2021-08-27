@@ -14,7 +14,7 @@ fi
 # Source the system-wide file.
 
 . /etc/bashrc
-. $HOME/.config/aliasrc
+. $QZ_ALIASES
 . $HOME/ns.sh # pyenv
 
 # emacs-vterm display helper

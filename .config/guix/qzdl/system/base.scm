@@ -28,7 +28,7 @@
    (initrd microcode-initrd)
 
    ;; disable ipv6 for safe vpn usage; we just aren't there yet :/
-   (kernel-arguments '("quiet" "ipv6.disable=1"))
+   (kernel-arguments '("quiet" "ipv6.disable=1" "net.ifnames=0"))
 
    ;; kernel layout, not necessarily X layout
    (keyboard-layout (keyboard-layout "us" "altgr-intl" #:model "thinkpad"))
@@ -60,7 +60,7 @@
    ;;   AN ARTIFACT OF INCIDENTAL COMPLEXITY IN GUIX
    (file-systems (cons*
                   (file-system
-                   (mount-point "/tmp")
+                   (mount-point "/")
                    (device "none")
                    (type "tmpfs")
                    (check? #f))
@@ -69,7 +69,7 @@
    (packages (append (list
                       git
                       stow
-                      emacs-pgtk-nativecomp
+                      emacs
                       vim
                       ;;openvpn
                       nss-certs

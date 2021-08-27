@@ -1,0 +1,33 @@
+# system commands
+alias \
+  ls='ls -p --color=auto' \
+  ll='ls -lah' \
+  grep='grep --color=auto' \
+
+alias \
+  yt="youtube-dl --add-metadata -i -o '%(upload_date)s-%(title)s.%(ext)s'" \
+  yta="yt -x -f bestaudio/best" \
+  g='guix' \
+  gp='echo $GUIX_PROFILE' \
+  gg='git' \
+  h='sudo herd' \
+  xo='xdg-open'
+
+# re-source
+alias \
+  rrb='source ~/.bashrc' \
+  rrp='source $HOME/.config/shell/profile' \
+  rra='source $HOME/.config/shell/aliases'
+
+# easy check files
+alias \
+  aa='qz-get-aliases' \
+  af='qz-get-functions'
+
+# my functions
+alias \
+  gR='qz-guix-reconfigure' \
+  gRd='qz-guix-reconfigure-debug' \
+  gse='qz-guix-source-extra-profile'
+  gsp='qz-guix-source-profile'
+  dlsh='qz-download-scihub-doi'
