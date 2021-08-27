@@ -65,3 +65,5 @@ miniconda3/
 .local/share/nyxt/history/
 *PCSX2/bios/
 *virtualenv/
+*.log
+*keypairs*

@@ -1335,6 +1335,34 @@ guix specified by the given commit sha
 #+end_src
 
 #+RESULTS:
+* other
+** local services hell
+sudo cryptsetup luksOpen /dev/sda1 xhdd
+sudo mount -o rw /dev/mapper/xhdd /media/xhdd
+
+sudo chown -R $USER /var/lib/sonarr/ /var/lib/radarr/ /usr/lib/radarr/ /usr/lib/sonarr/ /media/xhdd/ &&  sudo systemctl restart sonarr radarr  && sudo systemctl daemon-reload
+
+
+* merge conflict prolly
+** .profile
+#+begin_src bash
+# Adds `~/.scripts` and all subdirectories to $PATH
+export PATH="$PATH:$(du "$HOME/.scripts/" | cut -f2 | tr '\n' ':' | sed 's/:*$//'):~/.local/bin"
+export EDITOR="emacsclient -c -a emacs" # opens GUI
+export TERMINAL="st"
+export BROWSER="firefox"
+export READER="zathura"
+export FILE="emacsclient -t -a emacs"
+export BIB="$HOME/Documents/LaTeX/uni.bib"
+export REFER="$HOME/Documents/referbib"
+export SUDO_ASKPASS="$HOME/.scripts/tools/dmenupass"
+export NOTMUCH_CONFIG="$HOME/.config/notmuch-config"
+export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
+export GDK_SCALE=2
+export GDK_DPI_SCALE=0.5
+#+end_src
+
+
 
 ** TODO emacs config as-a-package
 basically, to be able to update my emacs config with ~guix pull~

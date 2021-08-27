@@ -1,0 +1,5 @@
+# .gitsubmodules & others
+\.git.*
+
+# emacs org files
+.*\.org
