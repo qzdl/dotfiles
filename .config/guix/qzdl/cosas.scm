@@ -1,4 +1,5 @@
-(define-module (qzdl)
+(define-module (qzdl cosas)
+  #:use-module (gnu system keyboard)
   #:export (my-name
             my-keyboard-layout))
 

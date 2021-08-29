@@ -1,11 +1,13 @@
 (define-module (qzdl services)
-  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (qzdl cosas)
   #:use-module (qzdl rules)
+  #:use-module (srfi srfi-1)            ;; provides remove
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services desktop)   ;; for udev
-  #:use-module (gnu services databases) ;; for %desktop-services
-  #:use-module (gnu services desktop)
+  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
+  #:use-module (gnu services databases) ;; for postgres
+  #:use-module (gnu services desktop)   ;; FIXME %desktop-services is blote
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
   #:use-module (gnu services virtualization)
@@ -18,6 +20,7 @@
             ;;my-ssh-service
             my-postgresql-service
             my-postgresql-role-service
+            my-login-service
             %my-desktop-services))
 
 ;; X11
@@ -54,13 +57,22 @@
             (unix-sock-group "libvirt")
             (tls-port "16555"))))
 
+(define my-login-service
+  (service slim-service-type
+           (slim-configuration
+            (xorg-configuration
+             (xorg-configuration
+              (keyboard-layout my-keyboard-layout)
+              (extra-config (list %xorg-libinput-config
+                                  %xorg-intel-antitearing-i915)))))))
+
 (define my-docker-service
   (service docker-service-type))
 
 (define %my-desktop-services
   (remove
-   (lambda (s) (or (eq? s gdm-service-type)
-              (eq? s slim-service-type)))
+   (lambda (s) (let ((srv (service-kind s)))
+                 (or (eq? srv gdm-service-type))))
     (modify-services
      %desktop-services
        (elogind-service-type config =>

@@ -1,4 +1,5 @@
 (define-module (qzdl system base)
+  #:use-module (qzdl cosas)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -31,7 +32,7 @@
    (kernel-arguments '("quiet" "ipv6.disable=1" "net.ifnames=0"))
 
    ;; kernel layout, not necessarily X layout
-   (keyboard-layout (keyboard-layout "us" "altgr-intl" #:model "thinkpad"))
+   (keyboard-layout my-keyboard-layout)
 
    ;; UEFI+GRUB
    (bootloader (bootloader-configuration

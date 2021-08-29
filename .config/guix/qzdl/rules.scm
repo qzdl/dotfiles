@@ -1,8 +1,9 @@
 (define-module (qzdl rules)
-  #:use-module (gnu services desktop)
   #:use-module (gnu services base)
+  #:use-module (gnu services desktop)
   #:export (%udev-rule-backlight
-            %xorg-libinput-config))
+            %xorg-libinput-config
+            %xorg-intel-antitearing-i915))
 
 (define %udev-rule-backlight
   (udev-rule

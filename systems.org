@@ -14,24 +14,6 @@ involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]]
 
 inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
 
-(qz/ensure-tag "" "project")
-
-#+begin_src emacs-lisp :results drawer
-
-(mapcar
- (lambda (i)
-   (or (and (listp i) i) (list i)))
- '(("already-list") "not-list"))
-
-
-
-#+end_src
-
-#+RESULTS:
-:results:
-((already-list) (not-list))
-:end:
-
 * configuration
 ** testing
 #+begin_src shell :tangle no
@@ -60,7 +42,7 @@ source test-helpers.sh
 source $HOME/.config/shell/profile
 
 MY_BASEPATH=$HOME/dotfiles
-GUIX_LOADPATH_MY="$MY_BASEPATH/guix"
+GUIX_LOADPATH_MY="$MY_BASEPATH/.config/guix"
 GUIX_LOADPATH_QZDL="$GUIX_LOADPATH_MY/qzdl"
 res=($(headline "Testing Results") )
 
@@ -94,8 +76,8 @@ test-load-file() {
     (
       echo "...TESTING $FILE"
       echo ".....LOADING 'GUIX REPL -L $GUIX_LOADPATH_MY $FILE'"
-      res+=$(guix repl -L $GUIX_LOADPATH_MY $FILE \
-          && qz-color $qz_greener ".....PASSED: $FILE")
+      guix repl -L $GUIX_LOADPATH_MY $FILE \
+          && qz-color $qz_greener ".....PASSED: $FILE"
     )
 }
 
@@ -205,21 +187,26 @@ tree $HOME/dotfiles/.config/guix
 5 directories, 12 files
 :end:
 
-** =(qzdl)=
+** =(qzdl cosas)=
 :PROPERTIES:
 :header-args: :tangle .config/guix/qzdl/qzdl.scm
 :END:
-:: .config/guix/qzdl/qzdl.scm
+:: .config/guix/qzdl/cosas.scm
 **** define
-#+begin_src scheme :tangle .config/guix/qzdl/qzdl.scm
-(define-module (qzdl)
-  #:export (my-name))
+#+begin_src scheme :tangle .config/guix/qzdl/cosas.scm
+(define-module (qzdl cosas)
+  #:use-module (gnu system keyboard)
+  #:export (my-name
+            my-keyboard-layout))
 
 (define my-name "Samuel Culpepper")
+
+(define my-keyboard-layout
+  (keyboard-layout "us" "altgr-intl" #:model "thinkpad"))
 #+end_src
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file $HOME/dotfiles/.config/guix/qzdl/qzdl.scm
+test-load-file $HOME/dotfiles/.config/guix/qzdl/cosas.scm
 #+end_src
 ** =(qzdl systems)=
 *** explanation
@@ -248,6 +235,7 @@ created using modules, as described:
 ***** define
 #+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
 (define-module (qzdl system base)
+  #:use-module (qzdl cosas)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -317,7 +305,7 @@ and intel ucode images to the bootloader config in initrd.
    (kernel-arguments '("quiet" "ipv6.disable=1" "net.ifnames=0"))
 
    ;; kernel layout, not necessarily X layout
-   (keyboard-layout (keyboard-layout "us" "altgr-intl" #:model "thinkpad"))
+   (keyboard-layout my-keyboard-layout)
 
    ;; UEFI+GRUB
    (bootloader (bootloader-configuration
@@ -413,12 +401,15 @@ test-load-file .config/guix/qzdl/system/minimal.scm
   #:use-module (gnu packages xorg)           ;; graphical display
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
   #:use-module (gnu packages audio)          ;;
+  #:use-module (gnu packages emacs)          ;;
   #:use-module (gnu packages pulseaudio)     ;; audio daemon
   #:use-module (gnu packages wm)             ;; lots of wm options (blote)
   #:use-module (gnu packages cups)           ;; printing
   #:use-module (gnu packages mtools)         ;; interact with ms disks
   #:use-module (gnu packages gtk)            ;; gnome stuff  (blote)
-  #:use-module (gnu packages web-browsers)  ;; web browsers (blote)
+  #:use-module (gnu packages web-browsers)   ;; web browsers (blote)
+  #:use-module (gnu packages linux)          ;; for bluez
+  #:use-module (gnu packages xorg)           ;; xf86-input-libinput
   #:export (minimal-operating-system))
 #+end_src
 ***** services
@@ -432,19 +423,20 @@ test-load-file .config/guix/qzdl/system/minimal.scm
   (operating-system
    (inherit base-operating-system)
 
-   (services (cons*
-              my-libvirt-service
-              my-bluetooth-service
-              my-docker-service
-              %my-desktop-services
-              (operating-system-services base-operating-system)))
+   (services
+    (cons* my-libvirt-service
+           my-bluetooth-service
+           my-docker-service
+           my-login-service
+           %my-desktop-services
+           (operating-system-services base-operating-system)))
 
    (packages
     (cons* pulseaudio
            bluez
            bluez-alsa
            tlp                  ;; laptop power management
-           fx86-input-libinput
+           xf86-input-libinput
            emacs
            (operating-system-packages base-operating-system)))))
 #+end_src
@@ -506,10 +498,11 @@ installation-os-nonfree
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/rules.scm
 (define-module (qzdl rules)
-  #:use-module (gnu services desktop)
   #:use-module (gnu services base)
+  #:use-module (gnu services desktop)
   #:export (%udev-rule-backlight
-            %xorg-libinput-config))
+            %xorg-libinput-config
+            %xorg-intel-antitearing-i915))
 #+end_src
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
@@ -592,13 +585,15 @@ file:./.doc/services.scm.png
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define-module (qzdl services)
-  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (qzdl cosas)
   #:use-module (qzdl rules)
+  #:use-module (srfi srfi-1)            ;; provides remove
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services desktop)   ;; for udev
-  #:use-module (gnu services databases) ;; for %desktop-services
-  #:use-module (gnu services desktop)
+  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
+  #:use-module (gnu services databases) ;; for postgres
+  #:use-module (gnu services desktop)   ;; FIXME %desktop-services is blote
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
   #:use-module (gnu services virtualization)
@@ -611,6 +606,7 @@ file:./.doc/services.scm.png
             ;;my-ssh-service
             my-postgresql-service
             my-postgresql-role-service
+            my-login-service
             %my-desktop-services))
 #+end_src
 **** test
@@ -657,7 +653,7 @@ users must be in the =lp= group
 #+end_src
 **** TODO network-manager-service w/ openvpn
 **** TODO sshd service
-#+begin_src scheme
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
 
 #+end_src
 **** TODO homelab services
@@ -668,6 +664,17 @@ users must be in the =lp= group
            (libvirt-configuration
             (unix-sock-group "libvirt")
             (tls-port "16555"))))
+#+end_src
+**** TODO login manager
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-login-service
+  (service slim-service-type
+           (slim-configuration
+            (xorg-configuration
+             (xorg-configuration
+              (keyboard-layout my-keyboard-layout)
+              (extra-config (list %xorg-libinput-config
+                                  %xorg-intel-antitearing-i915)))))))
 #+end_src
 **** docker
 requires user & group
@@ -680,8 +687,8 @@ should prolly split this out
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define %my-desktop-services
   (remove
-   (lambda (s) (or (eq? s gdm-service-type)
-              (eq? s slim-service-type)))
+   (lambda (s) (let ((srv (service-kind s)))
+                 (or (eq? srv gdm-service-type))))
     (modify-services
      %desktop-services
        (elogind-service-type config =>
@@ -1477,7 +1484,44 @@ sudo cryptsetup luksOpen /dev/sda1 xhdd
 sudo mount -o rw /dev/mapper/xhdd /media/xhdd
 
 sudo chown -R $USER /var/lib/sonarr/ /var/lib/radarr/ /usr/lib/radarr/ /usr/lib/sonarr/ /media/xhdd/ &&  sudo systemctl restart sonarr radarr  && sudo systemctl daemon-reload
+** xsession
+#+begin_src shell :tangle .emacs.d/start-exwm.sh
+#!/bin/sh
 
+# Source .profile for common environment vars
+. ~/.profile
+
+# Disable access control for the current user
+xhost +SI:localuser:$USER
+
+# Make Java applications aware this is a non-reparenting window manager
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+# Start Shepherd to manage user daemons
+if [ -z "$(pgrep -u samuel shepherd)" ]; then
+  shepherd
+fi
+
+# Run xsettingsd to progagate font and theme settings
+xsettingsd &
+
+# Enable screen compositing
+compton &
+
+# Turn off the system bell
+xset -b
+
+# Enable screen locking on suspend
+xss-lock -- slock &
+
+# Uncomment this to start xterm instead for debugging purposes!
+# Then you can manually run the window manager and log output
+# > exec dbus-launch emacs -mm --debug-init --use-exwm 2>&1 | tee ~/debug.log
+#xterm
+
+# Fire it up
+exec dbus-launch --exit-with-session emacs -mm --debug-init --use-exwm
+#+end_src
 
 * merge conflict prolly
 ** .profile

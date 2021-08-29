@@ -1,1 +1,1 @@
-emacs/.doom.d/start-exwm.sh
+.emacs.d/start-exwm.sh
