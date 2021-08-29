@@ -16,15 +16,15 @@
          (type luks-device-mapping))))
 
  (services
-   (modify-services
-    (operating-system-services minimal-operating-system)
-    (postgresql-role-service-type
-     config => (postgresql-role-configuration
-                (inherit config)
-                (extensions (list (service-extension postgresql-role-service-type
-                    (const (postgresql-role
-                            (name "newstore")
-                            (create-database? #t))))))))))
+  (cons*
+   (operating-system-services minimal-operating-system)
+   (service slim-service-type
+    (postgresql-role-configuration
+     (extensions (list (service-extension
+                        postgresql-role-service-type
+                        (const (postgresql-role
+                                (name "newstore")
+                                (create-database? #t))))))))))
 
  (file-systems (cons*
                 (file-system

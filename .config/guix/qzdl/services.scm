@@ -69,19 +69,28 @@
 (define my-docker-service
   (service docker-service-type))
 
+;; (define %my-desktop-services
+;;   (list (service slim-service-type
+;;                  (elogind-configuration
+;;                   (handle-lid-switch-external-power 'suspend)))
+;;         (service slim-service-type
+;;                  (udev-configuration
+;;                   (rules (list %udev-rule-backlight))))
+;;         (service slim-service-type
+;;                  (network-manager-configuration
+;;                   (vpn-plugins (list network-manager-openvpn))))))
+
 (define %my-desktop-services
   (remove
-   (lambda (s) (let ((srv (service-kind s)))
-                 (or (eq? srv gdm-service-type))))
-    (modify-services
-     %desktop-services
-       (elogind-service-type config =>
-                             (elogind-configuration (inherit config)
-                                                    (handle-lid-switch-external-power 'suspend)))
-       (udev-service-type config =>
-                          (udev-configuration (inherit config)
-                                              (rules (cons %udev-rule-backlight
-                                                           (udev-configuration-rules config)))))
-       (network-manager-service-type config =>
-                                   (network-manager-configuration (inherit config)
-                                                                  (vpn-plugins (list network-manager-openvpn)))))))
+   (lambda (s) (eq? (service-kind s) gdm-service-type))
+  (modify-services %desktop-services
+                   (elogind-service-type config =>
+                                         (elogind-configuration (inherit config)
+                                                                (handle-lid-switch-external-power 'suspend)))
+                   (udev-service-type config =>
+                                      (udev-configuration (inherit config)
+                                                          (rules (cons %udev-rule-backlight
+                                                                       (udev-configuration-rules config)))))
+                   (network-manager-service-type config =>
+                                                 (network-manager-configuration (inherit config)
+                                                                                (vpn-plugins (list network-manager-openvpn)))))))
