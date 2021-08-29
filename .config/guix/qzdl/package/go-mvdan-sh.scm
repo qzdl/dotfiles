@@ -6,7 +6,7 @@
 
 
 
-  (package
+(package
     (name "go-mvdan-cc-sh")
     (version "2.6.4+incompatible")
     (source

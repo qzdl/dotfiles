@@ -34,3 +34,13 @@ Section \"InputClass\"
   MatchIsKeyboard \"on\"
 EndSection
 ")
+
+(define %xorg-intel-antitearing-base
+  "Section \"Device\"
+  Identifier \"Intel Graphics\"
+  Driver \"%s\"
+  Option \"TearFree\"    \"true\"
+EndSection")
+
+(define %xorg-intel-antitearing-i915
+ (format #f %xorg-intel-antitearing-base "i915"))

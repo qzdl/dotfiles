@@ -1,4 +1,6 @@
 (define-module (qzdl services)
+  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (qzdl rules)
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services desktop)   ;; for udev
@@ -7,7 +9,7 @@
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
   #:use-module (gnu services virtualization)
-  #:use-module (srfi srfi-1)             ;; provides remove
+  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
   #:export (my-libvirt-service
             my-docker-service
             my-bluetooth-service
@@ -17,6 +19,15 @@
             my-postgresql-service
             my-postgresql-role-service
             %my-desktop-services))
+
+;; X11
+             ;; (service slim-service-type
+             ;;    (slim-configuration
+             ;;     (xorg-configuration
+             ;;      (xorg-configuration
+             ;;       (keyboard-layout
+             ;;        (operating-system-keyboard-layout base-operating-system)
+             ;;        (extra-config (list %xorg-libinput-config)))))))
 
 (define my-bluetooth-service
   (bluetooth-service #:auto-enable? #t))
@@ -34,6 +45,8 @@
 
 (define my-postgresql-service
   (service postgresql-service-type))
+
+
 
 (define my-libvirt-service
   (service libvirt-service-type

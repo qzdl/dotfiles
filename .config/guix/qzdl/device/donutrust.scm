@@ -1,18 +1,7 @@
-;; X11
-             ;; (service slim-service-type
-             ;;    (slim-configuration
-             ;;     (xorg-configuration
-             ;;      (xorg-configuration
-             ;;       (keyboard-layout
-             ;;        (operating-system-keyboard-layout base-operating-system)
-             ;;        (extra-config (list %xorg-libinput-config)))))))
-
-
-
 (define-module (qzdl system donutrust)
- #:use-module (minimal-system)
  #:use-module (gnu)
- #:use-module (nongnu packages linux))
+ #:use-module (nongnu packages linux)
+ #:use-module (qzdl system minimal))
 
 (operating-system
  (inherit minimal-operating-system)

@@ -5,6 +5,7 @@
 #+PROPERTY: header-args       :tangle-mode (identity #o444)
 #+PROPERTY: header-args:shell :tangle-mode (identity #o755)
 #+title: system configuration
+#+filetags: :project:
 
 [[id:2e1b78ef-de6f-4af9-8a89-5d5ffe12a3ba][My]] system configurations for [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], compiled by [[id:953e0494-76b3-4ab7-bfe6-944e178b59dd][GNU Emacs]], deployed by [[id:884406e4-0851-4dc3-a6d3-cfe1c9fa1b2b][GNU
 Stow]].
@@ -13,14 +14,34 @@ involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]]
 
 inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
 
-* configuration
-** testing
-#+begin_src bash
-bash ~/dotfiles/update-dotfiles.sh
+(qz/ensure-tag "" "project")
+
+#+begin_src emacs-lisp :results drawer
+
+(mapcar
+ (lambda (i)
+   (or (and (listp i) i) (list i)))
+ '(("already-list") "not-list"))
+
+
+
 #+end_src
 
+#+RESULTS:
+:results:
+((already-list) (not-list))
+:end:
+
+* configuration
+** testing
+#+begin_src shell :tangle no
+bash update-dotfiles.sh
+#+end_src
+
+#+RESULTS:
+
 *** helpers
-#+begin_src bash :tangle .local/bin/test-helpers.sh
+#+begin_src shell :tangle .local/bin/test-helpers.sh
 headline() {
   echo "============================"
   echo $@
@@ -41,6 +62,7 @@ source $HOME/.config/shell/profile
 MY_BASEPATH=$HOME/dotfiles
 GUIX_LOADPATH_MY="$MY_BASEPATH/guix"
 GUIX_LOADPATH_QZDL="$GUIX_LOADPATH_MY/qzdl"
+res=($(headline "Testing Results") )
 
 cd $MY_BASEPATH
 
@@ -72,8 +94,8 @@ test-load-file() {
     (
       echo "...TESTING $FILE"
       echo ".....LOADING 'GUIX REPL -L $GUIX_LOADPATH_MY $FILE'"
-      guix repl -L $GUIX_LOADPATH_MY $FILE \
-          && qz-color $qz_greener ".....PASSED: $FILE"
+      res+=$(guix repl -L $GUIX_LOADPATH_MY $FILE \
+          && qz-color $qz_greener ".....PASSED: $FILE")
     )
 }
 
@@ -168,8 +190,9 @@ tree $HOME/dotfiles/.config/guix
     ├── device
     │   ├── donutrust.scm
     │   └── xps.scm
-    ├── packages
+    ├── package
     │   ├── go-mvdan-sh.scm
+    │   ├── manifest.scm
     │   └── python-3.6.4.scm
     ├── qzdl.scm
     ├── rules.scm
@@ -179,7 +202,7 @@ tree $HOME/dotfiles/.config/guix
         ├── install.scm
         └── minimal.scm
 
-5 directories, 11 files
+5 directories, 12 files
 :end:
 
 ** =(qzdl)=
@@ -195,7 +218,7 @@ tree $HOME/dotfiles/.config/guix
 (define my-name "Samuel Culpepper")
 #+end_src
 **** test
-#+begin_src shell :tangle test-system.sh
+#+begin_src shell :tangle .local/bin/test-system.sh
 test-load-file $HOME/dotfiles/.config/guix/qzdl/qzdl.scm
 #+end_src
 ** =(qzdl systems)=
@@ -474,15 +497,103 @@ test-load-file .config/guix/qzdl/system/minimal.scm
 installation-os-nonfree
 #+end_src
 
+** =(qzdl rules)=
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/rules.scm
+:END:
+:: .config/guix/qzdl/rules.scm
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define-module (qzdl rules)
+  #:use-module (gnu services desktop)
+  #:use-module (gnu services base)
+  #:export (%udev-rule-backlight
+            %xorg-libinput-config))
+#+end_src
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/rules.scm
+#+end_src
+**** udev-rule-backlight
+allow members of the "video" group to change the screen brightness.
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %udev-rule-backlight
+  (udev-rule
+   "90-backlight.rules"
+   (string-append "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chgrp video /sys/class/backlight/%k/brightness\""
+                  "\n"
+                  "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
+#+end_src
+
+#+RESULTS:
+**** xorg-libinput
+just a better laptop-trackpad control surface
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %xorg-libinput-config
+  "Section \"InputClass\"
+  Identifier \"Touchpads\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsTouchpad \"on\"
+
+  Option \"Tapping\" \"on\"
+  Option \"TappingDrag\" \"on\"
+  Option \"DisableWhileTyping\" \"on\"
+  Option \"MiddleEmulation\" \"on\"
+  Option \"ScrollMethod\" \"twofinger\"
+  Option \"Natural Scrolling\" \"on\"
+EndSection
+Section \"InputClass\"
+  Identifier \"Keyboards\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsKeyboard \"on\"
+EndSection
+")
+#+end_src
+**** TODO xorg screentearing-rule
+:: https://www.dedoimedo.com/computers/linux-intel-graphics-video-tearing.html
+
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %xorg-intel-antitearing-base
+  "Section \"Device\"
+  Identifier \"Intel Graphics\"
+  Driver \"%s\"
+  Option \"TearFree\"    \"true\"
+EndSection")
+
+(define %xorg-intel-antitearing-i915
+ (format #f %xorg-intel-antitearing-base "i915"))
+#+end_src
+
+***** find video driver
+#+begin_src shell :tangle no
+sudo lspci -k | grep -EA3 'VGA|3D|Display'
+#+end_src
+
+#+RESULTS:
+#+begin_example
+00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (Whiskey Lake) (rev 02)
+        Subsystem: Lenovo Device 2292
+        Kernel driver in use: i915
+00:04.0 Signal processing controller: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor Thermal Subsystem (rev 0c)
+#+end_example
+
 ** =(qzdl services)=
 :PROPERTIES:
 :header-args: :tangle .config/guix/qzdl/services.scm
 :END:
 :: .config/guix/qzdl/services.scm
+file:./.doc/services.scm.png
 
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define-module (qzdl services)
+  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (qzdl rules)
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services desktop)   ;; for udev
@@ -491,7 +602,7 @@ installation-os-nonfree
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
   #:use-module (gnu services virtualization)
-  #:use-module (srfi srfi-1)             ;; provides remove
+  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
   #:export (my-libvirt-service
             my-docker-service
             my-bluetooth-service
@@ -509,7 +620,7 @@ test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
 
 
 **** TODO xorg-service
-#+begin_src scheme .config/guix/qzdl/services.scm
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
  ;; X11
               ;; (service slim-service-type
               ;;    (slim-configuration
@@ -584,75 +695,22 @@ should prolly split this out
                                    (network-manager-configuration (inherit config)
                                                                   (vpn-plugins (list network-manager-openvpn)))))))
 #+end_src
-** =(qzdl rules)=
-#+PROPERTY header-args:scheme :tangle .config/guix/qzdl/rules.scm
-:: .config/guix/qzdl/rules.scm
-
-**** define
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define-module (qzdl rules)
-  #:use-module (gnu services desktop)
-  #:use-module (gnu services base)
-  #:export (%udev-rule-backlight
-            %xorg-libinput-config))
-#+end_src
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file .config/guix/qzdl/rules.scm
-#+end_src
-**** udev-rule-backlight
-allow members of the "video" group to change the screen brightness.
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define %udev-rule-backlight
-  (udev-rule
-   "90-backlight.rules"
-   (string-append "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
-                  "RUN+=\"/run/current-system/profile/bin/chgrp video /sys/class/backlight/%k/brightness\""
-                  "\n"
-                  "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
-                  "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
-#+end_src
-
-#+RESULTS:
-**** xorg-libinput
-just a better laptop-trackpad control surface
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define %xorg-libinput-config
-  "Section \"InputClass\"
-  Identifier \"Touchpads\"
-  Driver \"libinput\"
-  MatchDevicePath \"/dev/input/event*\"
-  MatchIsTouchpad \"on\"
-
-  Option \"Tapping\" \"on\"
-  Option \"TappingDrag\" \"on\"
-  Option \"DisableWhileTyping\" \"on\"
-  Option \"MiddleEmulation\" \"on\"
-  Option \"ScrollMethod\" \"twofinger\"
-  Option \"Natural Scrolling\" \"on\"
-EndSection
-Section \"InputClass\"
-  Identifier \"Keyboards\"
-  Driver \"libinput\"
-  MatchDevicePath \"/dev/input/event*\"
-  MatchIsKeyboard \"on\"
-EndSection
-")
-#+end_src
-**** TODO xorg screentearing-rule
 ** =(qzdl devices)=
 *** =(qzdl devices xps)= :@home:
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 *** =(qzdl devices donutrust)= :@work:
-#+PROPERTY: header-args:scheme :tangle .config/guix/qzdl/device/donutrust.scm
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/device/donutrust.scm
+:END:
+
 my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
 **** define
 #+begin_src scheme
 (define-module (qzdl system donutrust)
- #:use-module (minimal-system)
  #:use-module (gnu)
- #:use-module (nongnu packages linux))
+ #:use-module (nongnu packages linux)
+ #:use-module (qzdl system minimal))
 #+end_src
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
@@ -700,8 +758,88 @@ test-load-file .config/guix/qzdl/device/donutrust.scm
 (define-module (qzdl device xps))
 #+end_src
 ** =(qzdl packages)=
-:: .config/guix/qzdl/packages
+:: .config/guix/qzdl/package
 
+*** manifest
+#+begin_src scheme :tangle .config/guix/qzdl/package/manifest.scm
+(specifications->manifest
+  (list "emacs-native-comp"
+        "mpv"
+        "ffmpeg"
+        "python-virtualenv"
+        "libgccjit"
+        "postgresql"
+        "docker-compose"
+        "docker"
+        "python-alembic"
+        "bluez-alsa"
+        "bluez"
+        "emacs-jedi"
+        "imagemagick"
+        "python-pywal"
+        "dunst"
+        "gnupg"
+        "curl"
+        "cmake"
+        "emacs-elpy"
+        "python-flake8"
+        "python-pip"
+        "python"
+        "python-pyzstd"
+        "recutils"
+        "ripgrep"
+        "gcc-toolchain"
+        "openssh"
+        "pulsemixer"
+        "emacs-guix"
+        "firefox"
+        "arandr"
+        "xrandr"
+        "cairo"
+        "pango"
+        "compton"
+        "icecat"
+        "nyxt"
+        "feh"
+        "xf86-input-libinput"
+        "xorg-server"
+        "xinit"
+        "xterm"
+        "xdg-utils"
+        "emacs-exwm"
+        "htop"
+        "noisetorch"
+        "emacs-prettier"
+        "tigervnc-client"
+        "xclip"
+        "dmenu"
+        "emacs-git-link"
+        "emacs-alert"
+        "filters"
+        "autoconf"
+        "rlwrap"
+        "readline"
+        "st"
+        "guile"
+        "setxkbmap"
+        "tar"
+        "xz"
+        "zlib"
+        "bzip2"
+        "glibc"
+        "font-fira-code"
+        "font-google-roboto"
+        "emacs-vterm"
+        "emacs-emacsql"
+        "make"
+        "sqlite"
+        "emacs-sqlite"
+        "font-dejavu"
+        "tree"
+        "font-gnu-unifont"
+        "xf86-video-fbdev"
+        "emacs-desktop-environment"))
+#+end_src
 *** v4l2loopback-linux-module
 virtual video devices; hijack the webcam feed, or stream an application though loopback
 *** mtools :core:
@@ -732,7 +870,7 @@ for development machines, gotta go fast
 
 *** emacs :core:
 *** python-3.6.4
-#+begin_src scheme :tangle .config/guix/qzdl/packages/python-3.6.4.scm
+#+begin_src scheme :tangle .config/guix/qzdl/package/python-3.6.4.scm
 (define-public python-3.6
   (package (inherit python-2)
     (version "3.6.4")
@@ -840,7 +978,7 @@ for development machines, gotta go fast
 :: [[https://github.com/mvdan/sh][GitHub: mvdan/sh]]
 :: [[https://pkg.go.dev/mvdan.cc/sh/v3][sh · pkg.go.dev]]
 
-#+begin_src scheme :tangle .config/guix/qzdl/packages/go-mvdan-sh.scm
+#+begin_src scheme :tangle .config/guix/qzdl/package/go-mvdan-sh.scm
 ;; <2021-08-11 Wed 13:33> `guix import go mvdan.cc/sh'
 (use-modules (guix packages)
              (guix git-download)
@@ -849,7 +987,7 @@ for development machines, gotta go fast
 
 
 
-  (package
+(package
     (name "go-mvdan-cc-sh")
     (version "2.6.4+incompatible")
     (source
@@ -873,7 +1011,6 @@ for development machines, gotta go fast
 
 ;;go-mvdan-cc-sh
 #+end_src
-**
 
 *** python-pywal :rice:
 *** imagemagick
@@ -1310,9 +1447,8 @@ block "END: sourcing"
  ;;   (openpgp-fingerprint
  ;;    "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))
 )
-  #+end_src
+#+end_src
 
-  #+RESULTS:
 ** HACK inferiors for python
 this does not work how I want; it will not install python from the revision of
 guix specified by the given commit sha
@@ -1371,6 +1507,37 @@ basically, to be able to update my emacs config with ~guix pull~
 docker run -it -v /tmp:/tmp -v $HOME/git ufoym/deepo python3
 #+end_src
 
+** TODO final test outputs
+#+begin_src shell :tangle no
+# .local/bin/test-system.sh
+for line in $res ; do
+    echo hey
+    echo $line
+done
+#+end_src
+
+* docs, analysis
+
+** testing all
+#+begin_src shell :tangle .local/bin/get-deps-qzdl.sh
+cd $HOME/dotfiles
+mkdir -p doc
+cd doc
+
+for file in $(find $HOME/.config/guix/) ; do
+    [ ! -f $file ] && continue
+    df="$(basename $file)"
+    echo "deps: running guild for deps of $file, to $df"
+    guild use2dot $file > $df
+    for driver in dot neato twopi circo fdp sfdp patchwork ; do
+        dp="$df.png"
+        echo "visualizing: $driver, for $df, to $dp"
+        $driver $df -Tpng -o $dp --over
+    done
+done
+#+end_src
+
+
 * Footnotes
 [fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]
 [fn:4] [[https://wiki.archlinux.org/title/microcode][Microcode - ArchWiki]]
@@ -1380,6 +1547,6 @@ docker run -it -v /tmp:/tmp -v $HOME/git ufoym/deepo python3
 - get: ~localectl~
 - set: ~sudo localectl set-blocale LANG=en_US.UTF_8~
 [fn:1] check the existing timezone with the following ([[https://www.tecmint.com/check-linux-timezone/][How to Check Timezone in Linux]])
-  #+begin_src bash
+#+begin_src bash :tangle no
   timedatectl | grep -i "time zone"
-  #+end_src
+#+end_src
