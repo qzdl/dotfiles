@@ -60,7 +60,9 @@ dice="🎲"
 end=$money
 break=""
 
-    PS1="\n┏━❨\A❩━❨\u@\h❩━❨\w❩$break"
+
+    PS1="\n┏━❨\A❩━❨\u@\h❩$break"
+PS1="$PS1\n┣━❨\w❩$break"
 PS1="$PS1\n┗━$GUIX_ENV_PS1$end "
 
 PS1=$PS1'\[$(vterm_prompt_end)\]'

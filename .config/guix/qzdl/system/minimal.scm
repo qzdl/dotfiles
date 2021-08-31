@@ -34,7 +34,7 @@
            my-bluetooth-service
            my-docker-service
            my-login-service
-           %my-desktop-services
+           %desktop-services
            (operating-system-services base-operating-system)))
 
    (packages

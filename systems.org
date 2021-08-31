@@ -16,12 +16,6 @@ inspired by [[https://config.daviwil.com/systems][System Configuration with Guix
 
 * configuration
 ** testing
-#+begin_src shell :tangle no
-bash update-dotfiles.sh
-#+end_src
-
-#+RESULTS:
-
 *** helpers
 #+begin_src shell :tangle .local/bin/test-helpers.sh
 headline() {
@@ -112,7 +106,7 @@ headline "UPDATING DOTFILES"
 delim
 
 block "BEGIN: COMPILE DOTFILES"
-emacs -Q --batch --script $HOME/dotfiles/.doom.d/tangle-dotfiles.el
+emacs -Q --batch --script $HOME/dotfiles/.doom.d/scripts/tangle-dotfiles.el
 block "END: COMPILE DOTFILES"
 delim
 
@@ -132,7 +126,7 @@ test-system.sh
 #+end_src
 *** compilation
 **** .doom.d/tangle-dotfiles.el
-#+begin_src emacs-lisp :tangle .doom.d/tangle-dotfiles.el
+#+begin_src emacs-lisp :tangle .doom.d/scripts/tangle-dotfiles.el
 (require 'org)
 
 (defun qz/tangle-sys ()
@@ -208,6 +202,643 @@ tree $HOME/dotfiles/.config/guix
 #+begin_src shell :tangle .local/bin/test-system.sh
 test-load-file $HOME/dotfiles/.config/guix/qzdl/cosas.scm
 #+end_src
+** =(qzdl rules)=
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/rules.scm
+:END:
+:: .config/guix/qzdl/rules.scm
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define-module (qzdl rules)
+  #:use-module (gnu services base)
+  #:use-module (gnu services desktop)
+  #:export (%udev-rule-backlight
+            %xorg-libinput-config
+            %xorg-intel-antitearing-i915))
+#+end_src
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/rules.scm
+#+end_src
+***** verify
+#+begin_src scheme :tangle no
+
+(use-modules (qzdl services))
+(use-modules (ice-9 pretty-print))
+
+(pretty-print %my-desktop-services)
+#+end_src
+
+#+RESULTS:
+
+**** udev-rule-backlight
+:: [[https://guix.gnu.org/manual/en/html_node/Base-Services.html][Base Services (GNU Guix Reference Manual)]]
+allow members of the "video" group to change the screen brightness.
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %udev-rule-backlight
+  (udev-rule
+   "90-backlight.rules"
+   (string-append "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chgrp video /sys/class/backlight/%k/brightness\""
+                  "\n"
+                  "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
+                  "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
+#+end_src
+
+#+RESULTS:
+**** xorg-libinput
+just a better laptop-trackpad control surface
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %xorg-libinput-config
+  "Section \"InputClass\"
+  Identifier \"Touchpads\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsTouchpad \"on\"
+
+  Option \"Tapping\" \"on\"
+  Option \"TappingDrag\" \"on\"
+  Option \"DisableWhileTyping\" \"on\"
+  Option \"MiddleEmulation\" \"on\"
+  Option \"ScrollMethod\" \"twofinger\"
+  Option \"Natural Scrolling\" \"on\"
+EndSection
+Section \"InputClass\"
+  Identifier \"Keyboards\"
+  Driver \"libinput\"
+  MatchDevicePath \"/dev/input/event*\"
+  MatchIsKeyboard \"on\"
+EndSection
+")
+#+end_src
+**** TODO xorg screentearing-rule
+:: https://www.dedoimedo.com/computers/linux-intel-graphics-video-tearing.html
+
+#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
+(define %xorg-intel-antitearing-base
+  "Section \"Device\"
+  Identifier \"Intel Graphics\"
+  Driver \"%s\"
+  Option \"TearFree\"    \"true\"
+EndSection")
+
+(define %xorg-intel-antitearing-i915
+ (format #f %xorg-intel-antitearing-base "i915"))
+#+end_src
+
+***** find video driver
+#+begin_src shell :tangle no
+sudo lspci -k | grep -EA3 'VGA|3D|Display'
+#+end_src
+
+#+RESULTS:
+#+begin_example
+00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (Whiskey Lake) (rev 02)
+        Subsystem: Lenovo Device 2292
+        Kernel driver in use: i915
+00:04.0 Signal processing controller: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor Thermal Subsystem (rev 0c)
+#+end_example
+** =(qzdl jobs)=
+:: .config/guix/qzdl/jobs.scm
+
+#+begin_src scheme :tangle .config/guix/qzdl/jobs.scm
+(define-module (qzdl jobs)
+  #:use-module (gnu)
+  #:use-module (guix)
+  #:use-module (gnu services mcron))
+
+(define updatedb-job
+  ;; Run 'updatedb' at 3AM every day.  Here we write the
+  ;; job's action as a Scheme procedure.
+  #~(job '(next-hour '(3))
+         (lambda ()
+           (execl (string-append #$findutils "/bin/updatedb")
+                  "updatedb"
+                  "--prunepaths=/tmp /var/tmp /gnu/store"))))
+#+end_src
+** =(qzdl services)=
+:PROPERTIES:
+:header-args: :tangle .config/guix/qzdl/services.scm
+:END:
+:: .config/guix/qzdl/services.scm
+
+file:./doc/services.scm.png
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define-module (qzdl services)
+  #:use-module (qzdl cosas)
+  #:use-module (qzdl rules)
+  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (gnu services)
+  #:use-module (gnu services base)
+  #:use-module (gnu services desktop)   ;; for udev
+  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
+  #:use-module (gnu services databases) ;; for postgres
+  #:use-module (gnu services desktop)   ;; FIXME %desktop-services is blote
+  #:use-module (gnu services docker)
+  #:use-module (gnu services networking)
+  #:use-module (gnu services virtualization)
+  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
+  #:export (my-libvirt-service
+            my-docker-service
+            my-bluetooth-service
+            ;;my-xorg-service
+            ;;my-network-manager-service
+            ;;my-ssh-service
+            my-postgresql-service
+            my-postgresql-role-service
+            my-login-service
+            %my-desktop-services))
+#+end_src
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
+#+end_src
+
+**** TODO xorg-service
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+ ;; X11
+              ;; (service slim-service-type
+              ;;    (slim-configuration
+              ;;     (xorg-configuration
+              ;;      (xorg-configuration
+              ;;       (keyboard-layout
+              ;;        (operating-system-keyboard-layout base-operating-system)
+              ;;        (extra-config (list %xorg-libinput-config)))))))
+#+end_src
+**** TODO bluetooth-service
+users must be in the =lp= group
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-bluetooth-service
+  (bluetooth-service #:auto-enable? #t))
+#+end_src
+
+**** TODO postgresql-service
+:: https://guix.gnu.org/manual/en/html_node/Database-Services.html
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-postgresql-role-service
+  (service postgresql-role-service-type
+   (postgresql-role-configuration
+    (roles
+     (list (postgresql-role
+            (name "postgres")
+            (create-database? #t))
+           (postgresql-role
+            (name "samuel")
+            (create-database? #t)))))))
+
+(define my-postgresql-service
+  (service postgresql-service-type))
+#+end_src
+**** TODO network-manager-service w/ openvpn
+:: [[https://guix.gnu.org/manual/en/html_node/Networking-Services.html][Networking Services (GNU Guix Reference Manual)]]
+**** TODO sshd service
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+
+#+end_src
+**** TODO homelab services
+**** TODO virtualisation; libvert
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-libvirt-service
+  (service libvirt-service-type
+           (libvirt-configuration
+            (unix-sock-group "libvirt")
+            (tls-port "16555"))))
+#+end_src
+**** TODO login manager
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-login-service
+  (service slim-service-type
+           (slim-configuration
+            (xorg-configuration
+             (xorg-configuration
+              (keyboard-layout my-keyboard-layout)
+              (extra-config (list %xorg-libinput-config
+                                  %xorg-intel-antitearing-i915)))))))
+#+end_src
+
+#+RESULTS:
+
+**** docker
+requires user & group
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-docker-service
+  (service docker-service-type))
+#+end_src
+**** TODO desktop
+should prolly split this out
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+;; (define %my-desktop-services
+;;   (list (service slim-service-type
+;;                  (elogind-configuration
+;;                   (handle-lid-switch-external-power 'suspend)))
+;;         (service slim-service-type
+;;                  (udev-configuration
+;;                   (rules (list %udev-rule-backlight))))
+;;         (service slim-service-type
+;;                  (network-manager-configuration
+;;                   (vpn-plugins (list network-manager-openvpn))))))
+
+(define %my-desktop-services %desktop-services)
+  ;; (remove
+  ;;  (lambda (s) (eq? (service-kind s) gdm-service-type))
+  ;; (modify-services %desktop-services
+  ;;                  (elogind-service-type config =>
+  ;;                                        (elogind-configuration (inherit config)
+  ;;                                                               (handle-lid-switch-external-power 'suspend)))
+  ;;                  (udev-service-type config =>
+  ;;                                     (udev-configuration (inherit config)
+  ;;                                                         (rules (cons %udev-rule-backlight
+  ;;                                                                      (udev-configuration-rules config)))))
+  ;;                  (network-manager-service-type config =>
+  ;;                                                (network-manager-configuration (inherit config)
+  ;;                                                                               (vpn-plugins (list network-manager-openvpn)))))))
+#+end_src
+
+** =(qzdl package)=
+:: .config/guix/qzdl/package
+
+*** manifest
+#+begin_src scheme :tangle .config/guix/qzdl/package/manifest.scm
+(specifications->manifest
+  (list "emacs-native-comp"
+        "mpv"
+        "ffmpeg"
+        "python-virtualenv"
+        "libgccjit"
+        "postgresql"
+        "docker-compose"
+        "docker"
+        "python-alembic"
+        "bluez-alsa"
+        "bluez"
+        "emacs-jedi"
+        "imagemagick"
+        "python-pywal"
+        "dunst"
+        "gnupg"
+        "curl"
+        "cmake"
+        "emacs-elpy"
+        "python-flake8"
+        "python-pip"
+        "python"
+        "python-pyzstd"
+        "recutils"
+        "ripgrep"
+        "gcc-toolchain"
+        "openssh"
+        "pulsemixer"
+        "emacs-guix"
+        "firefox"
+        "arandr"
+        "xrandr"
+        "cairo"
+        "pango"
+        "compton"
+        "icecat"
+        "nyxt"
+        "feh"
+        "xf86-input-libinput"
+        "xorg-server"
+        "xinit"
+        "xterm"
+        "xdg-utils"
+        "emacs-exwm"
+        "htop"
+        "noisetorch"
+        "emacs-prettier"
+        "tigervnc-client"
+        "xclip"
+        "dmenu"
+        "emacs-git-link"
+        "emacs-alert"
+        "filters"
+        "autoconf"
+        "rlwrap"
+        "readline"
+        "st"
+        "guile"
+        "setxkbmap"
+        "tar"
+        "xz"
+        "zlib"
+        "bzip2"
+        "glibc"
+        "font-fira-code"
+        "font-google-roboto"
+        "emacs-vterm"
+        "emacs-emacsql"
+        "make"
+        "sqlite"
+        "emacs-sqlite"
+        "font-dejavu"
+        "tree"
+        "font-gnu-unifont"
+        "xf86-video-fbdev"
+        "emacs-desktop-environment"))
+#+end_src
+*** v4l2loopback-linux-module
+virtual video devices; hijack the webcam feed, or stream an application though loopback
+*** mtools :core:
+:: [[https://www.gnu.org/software/mtools/][Mtools - GNU Project - Free Software Foundation]]
+*** dunst
+:: https://dunst-project.org/
+:: https://dunst-project.org/documentation
+
+**** notify-emacs.sh
+a script from u/deaddyfreddy, from
+https://reddit.com/r/emacs/comments/klsxwv/enabling_desktop_notifications_with_dunst_emacs/ghb17s2
+
+#+begin_src sh :tangle .config/dunst/notify-emacs.sh
+#!/bin/sh
+
+APPNAME="$1"
+SUMMARY="$2"
+BODY="$3"
+ICON="$4"
+URGENCY="$5"
+emacsclient -n --eval "(message \"${APPNAME}/${SUMMARY}: $BODY\")"
+#+end_src
+
+*** gnuzilla
+[[id:186a4daf-02ea-445b-9469-9909a5d7fb05][firefox]]
+*** emacs-native-comp :minimal:
+for development machines, gotta go fast
+
+*** emacs :core:
+*** python-3.6.4
+#+begin_src scheme :tangle .config/guix/qzdl/package/python-3.6.4.scm
+(define-public python-3.6
+  (package (inherit python-2)
+    (version "3.6.4")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "https://www.python.org/ftp/python/"
+                                  version "/Python-" version ".tar.xz"))
+              (patches (search-patches
+                        "python-fix-tests.patch"
+                        "python-3-fix-tests.patch"
+                        "python-3-deterministic-build-info.patch"
+                        "python-3-search-paths.patch"))
+              (patch-flags '("-p0"))
+              (sha256
+               (base32
+                "1fna7g8jxzl4kd2pqmmqhva5724c5m920x3fsrpsgskaylmr76qm"))
+              (snippet
+               '(begin
+                  (for-each delete-file
+                            '("Lib/ctypes/test/test_structures.py" ; fails on aarch64
+                              "Lib/ctypes/test/test_win32.py" ; fails on aarch64
+                              "Lib/test/test_fcntl.py")) ; fails on aarch64
+                  #t))))
+    ;; (arguments
+    ;;  (substitute-keyword-arguments (package-arguments python-2)
+    ;;    ((#:tests? _) #t)
+    ;;    ((#:phases phases)
+    ;;     `(modify-phases ,phases
+    ;;        (add-after 'unpack 'patch-timestamp-for-pyc-files
+    ;;          (lambda (_)
+    ;;            ;; We set DETERMINISTIC_BUILD to only override the mtime when
+    ;;            ;; building with Guix, lest we break auto-compilation in
+    ;;            ;; environments.
+    ;;            (setenv "DETERMINISTIC_BUILD" "1")
+    ;;            (substitute* "Lib/py_compile.py"
+    ;;              (("source_stats\\['mtime'\\]")
+    ;;               "(1 if 'DETERMINISTIC_BUILD' in os.environ else source_stats['mtime'])"))
+
+    ;;            ;; Use deterministic hashes for strings, bytes, and datetime
+    ;;            ;; objects.
+    ;;            (setenv "PYTHONHASHSEED" "0")
+
+    ;;            ;; Reset mtime when validating bytecode header.
+    ;;            (substitute* "Lib/importlib/_bootstrap_external.py"
+    ;;              (("source_mtime = int\\(source_stats\\['mtime'\\]\\)")
+    ;;               "source_mtime = 1"))
+    ;;            #t))
+    ;;        ;; These tests fail because of our change to the bytecode
+    ;;        ;; validation.  They fail because expected exceptions do not get
+    ;;        ;; thrown.  This seems to be no problem.
+    ;;        (add-after 'unpack 'disable-broken-bytecode-tests
+    ;;          (lambda
+    ;;            (substitute* "Lib/test/test_importlib/source/test_file_loader.py"
+    ;;              (("test_bad_marshal")
+    ;;               "disable_test_bad_marshal")
+    ;;              (("test_no_marshal")
+    ;;               "disable_test_no_marshal")
+    ;;              (("test_non_code_marshal")
+    ;;               "disable_test_non_code_marshal"))
+    ;;            #t))
+    ;;        ;; Unset DETERMINISTIC_BUILD to allow for tests that check that
+    ;;        ;; stale pyc files are rebuilt.
+    ;;        (add-before 'check 'allow-non-deterministic-compilation
+    ;;          (lambda _ (unsetenv "DETERMINISTIC_BUILD") #t))
+    ;;        ;; We need to rebuild all pyc files for three different
+    ;;        ;; optimization levels to replace all files that were not built
+    ;;        ;; deterministically.
+
+    ;;        ;; FIXME: Without this phase we have close to 2000 files that
+    ;;        ;; differ across different builds of this package.  With this phase
+    ;;        ;; there are about 500 files left that differ.
+    ;;        (add-after 'install 'rebuild-bytecode
+    ;;          (lambda* (#:key outputs #:allow-other-keys)
+    ;;            (setenv "DETERMINISTIC_BUILD" "1")
+    ;;            (let ((out (assoc-ref outputs "out")))
+    ;;              (for-each
+    ;;               (lambda (opt)
+    ;;                 (format #t "Compiling with optimization level: ~a\n"
+    ;;                         (if (null? opt) "none" (car opt)))
+    ;;                 (for-each (lambda (file)
+    ;;                             (apply invoke
+    ;;                                    `(,(string-append out "/bin/python3")
+    ;;                                      ,@opt
+    ;;                                      "-m" "compileall"
+    ;;                                      "-f" ; force rebuild
+    ;;                                      ;; Don't build lib2to3, because it's Python 2 code.
+    ;;                                      ;; Also don't build obviously broken test code.
+    ;;                                      "-x" "(lib2to3|test/bad.*)"
+    ;;                                      ,file)))
+    ;;                           (find-files out "\\.py$")))
+    ;;               (list '() '("-O") '("-OO"))))))))))
+
+    ;; (native-search-paths
+    ;;  (list (search-path-specification
+    ;;         (variable "PYTHONPATH")
+    ;;         (files (list (string-append "lib/python"
+    ;;                                     (version-major+minor version)
+    ;;                                     "/site-packages"))))))
+))
+#+end_src
+
+#+RESULTS:
+
+*** mvdan.cc/sh
+:: [[https://guix.gnu.org/manual/en/html_node/Invoking-guix-import.html][Invoking guix import (GNU Guix Reference Manual)]]
+:: [[https://github.com/mvdan/sh][GitHub: mvdan/sh]]
+:: [[https://pkg.go.dev/mvdan.cc/sh/v3][sh · pkg.go.dev]]
+
+#+begin_src bash :results drawer
+echo -e "(use-modules (guix packages)
+             (guix git-download)
+             (guix build-system go)
+             ((guix licenses) #:prefix license:))\n" >  /tmp/shfmt
+
+guix import go -r  mvdan.cc/sh/v3  >>/tmp/shfmt
+
+
+echo "'(" >> /tmp/shfmt
+for line in $(grep define-public /tmp/shfmt | cut -d' ' -f2) ; do
+    echo $line >> tmp/shfmt
+done
+echo ")" >> /tmp/shfmt
+
+cat /tmp/shfmt
+# guix package --install-from-file=/tmp/shfmt
+#+end_src
+
+#+RESULTS:
+:results:
+(use-modules (guix packages)
+             (guix git-download)
+             (guix build-system go)
+             ((guix licenses) #:prefix license:))
+
+(define-public go-github-com-creack-pty
+  (package
+    (name "go-github-com-creack-pty")
+    (version "1.1.15")
+    (source
+      (origin
+        (method git-fetch)
+        (uri (git-reference
+               (url "https://github.com/creack/pty")
+               (commit (string-append "v" version))))
+        (file-name (git-file-name name version))
+        (sha256
+          (base32
+            "1j5w51ammp5rp90bhdwqi216dxmndpmf4gf3gim75qls52qj8j2r"))))
+    (build-system go-build-system)
+    (arguments
+      '(#:import-path "github.com/creack/pty"))
+    (home-page "https://github.com/creack/pty")
+    (synopsis "pty")
+    (description
+      "Package pty provides functions for working with Unix terminals.
+")
+    (license license:expat)))
+
+(define-public go-mvdan-cc-editorconfig
+  (package
+    (name "go-mvdan-cc-editorconfig")
+    (version "0.2.0")
+    (source
+      (origin
+        (method git-fetch)
+        (uri (git-reference
+               (url "https://github.com/mvdan/editorconfig")
+               (commit (string-append "v" version))))
+        (file-name (git-file-name name version))
+        (sha256
+          (base32
+            "1rav1rp8pi921gsffqr2wjdhbr12w81g31yv6iw4yb1zyh726qqg"))))
+    (build-system go-build-system)
+    (arguments
+      '(#:import-path "mvdan.cc/editorconfig"))
+    (home-page "https://mvdan.cc/editorconfig")
+    (synopsis "editorconfig")
+    (description
+      "Package editorconfig allows parsing and using EditorConfig files, as defined
+in @url{https://editorconfig.org/,https://editorconfig.org/}.
+")
+    (license license:bsd-3)))
+
+(define-public go-mvdan-cc-sh-v3
+  (package
+    (name "go-mvdan-cc-sh-v3")
+    (version "3.3.1")
+    (source
+      (origin
+        (method git-fetch)
+        (uri (git-reference
+               (url "https://github.com/mvdan/sh")
+               (commit (string-append "v" version))))
+        (file-name (git-file-name name version))
+        (sha256
+          (base32
+            "09kfy1xjns4mgm0f4iq92vpyfkapw0j8swnsadk1mmqj6khzlyz3"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "mvdan.cc/sh/v3"))
+    (propagated-inputs
+      `(("go-mvdan-cc-editorconfig"
+         ,go-mvdan-cc-editorconfig)
+        ("go-golang-org-x-term" ,go-golang-org-x-term)
+        ("go-golang-org-x-sys" ,go-golang-org-x-sys)
+        ("go-golang-org-x-sync" ,go-golang-org-x-sync)
+        ("go-github-com-rogpeppe-go-internal"
+         ,go-github-com-rogpeppe-go-internal)
+        ("go-github-com-pkg-diff"
+         ,go-github-com-pkg-diff)
+        ("go-github-com-kr-text" ,go-github-com-kr-text)
+        ("go-github-com-kr-pretty"
+         ,go-github-com-kr-pretty)
+        ("go-github-com-google-renameio"
+         ,go-github-com-google-renameio)
+        ("go-github-com-creack-pty"
+         ,go-github-com-creack-pty)))
+    (home-page "https://mvdan.cc/sh/v3")
+    (synopsis "sh")
+    (description
+      "This package provides a shell parser, formatter, and interpreter.  Supports @url{https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html,POSIX Shell}, @url{https://www.gnu.org/software/bash/,Bash}, and
+@url{http://www.mirbsd.org/mksh.htm,mksh}.  Requires Go 1.15 or later.")
+    (license license:bsd-3)))
+
+'(
+)
+:end:
+
+#+begin_src scheme :tangle .config/guix/qzdl/package/go-mvdan-sh.scm
+;; <2021-08-11 Wed 13:33> `guix import go mvdan.cc/sh'
+(use-modules (guix packages)
+             (guix git-download)
+             (guix build-system go)
+             (guix licenses))
+
+(package
+    (name "go-mvdan-cc-sh")
+    (version "2.6.4")
+    (source
+      (origin
+        (method git-fetch)
+        (uri (git-reference
+               (url "https://github.com/mvdan/sh")
+               (commit (go-version->git-ref version))))
+        (file-name (git-file-name name version))
+        (sha256
+          (base32
+            "1jifac0fi0sz6wzdgvk6s9xwpkdng2hj63ldbaral8n2j9km17hh"))))
+    (build-system go-build-system)
+    (arguments '(#:import-path "mvdan.cc/sh"))
+    (home-page "https://mvdan.cc/sh")
+    (synopsis "sh")
+    (description
+      "This package provides a shell parser, formatter and interpreter.  Supports @url{http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html,POSIX Shell}, @url{https://www.gnu.org/software/bash/,Bash} and
+@url{https://www.mirbsd.org/mksh.htm,mksh}.  Requires Go 1.10 or later.")
+    (license bsd-3))
+
+;;go-mvdan-cc-sh
+#+end_src
+*** (or equiv [[https://github.com/Versent/saml2aws][GitHub - Versent/saml2aws: CLI tool which enables you to login and retrieve A...]])
+*** (or equiv [[https://github.com/derailed/k9s][GitHub - derailed/k9s: 🐶 Kubernetes CLI To Manage Your Clusters In Style!]])
+:: [[https://github.com/kubernetes-el/kubernetes-el][GitHub - kubernetes-el/kubernetes-el: Emacs porcelain for Kubernetes.]]
+*** python-pywal :rice:
+*** imagemagick
+*** recoll
+:: [[https://framagit.org/medoc92/recoll][Jean-Francois Dockes / recoll · GitLab]]
+*** TODO [[https://duckduckgo.com/?t=ffab&q=cflow+for+python+&ia=web][cflow for python at DuckDuckGo]]
 ** =(qzdl systems)=
 *** explanation
 with a simple separation of concerns, in attempts to eliminate redundancy:
@@ -428,7 +1059,7 @@ test-load-file .config/guix/qzdl/system/minimal.scm
            my-bluetooth-service
            my-docker-service
            my-login-service
-           %my-desktop-services
+           %desktop-services
            (operating-system-services base-operating-system)))
 
    (packages
@@ -488,247 +1119,27 @@ test-load-file .config/guix/qzdl/system/minimal.scm
 
 installation-os-nonfree
 #+end_src
-
-** =(qzdl rules)=
-:PROPERTIES:
-:header-args: :tangle .config/guix/qzdl/rules.scm
-:END:
-:: .config/guix/qzdl/rules.scm
-
-**** define
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define-module (qzdl rules)
-  #:use-module (gnu services base)
-  #:use-module (gnu services desktop)
-  #:export (%udev-rule-backlight
-            %xorg-libinput-config
-            %xorg-intel-antitearing-i915))
-#+end_src
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file .config/guix/qzdl/rules.scm
-#+end_src
-**** udev-rule-backlight
-allow members of the "video" group to change the screen brightness.
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define %udev-rule-backlight
-  (udev-rule
-   "90-backlight.rules"
-   (string-append "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
-                  "RUN+=\"/run/current-system/profile/bin/chgrp video /sys/class/backlight/%k/brightness\""
-                  "\n"
-                  "ACTION==\"add\", SUBSYSTEM==\"backlight\", "
-                  "RUN+=\"/run/current-system/profile/bin/chmod g+w /sys/class/backlight/%k/brightness\"")))
-#+end_src
-
-#+RESULTS:
-**** xorg-libinput
-just a better laptop-trackpad control surface
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define %xorg-libinput-config
-  "Section \"InputClass\"
-  Identifier \"Touchpads\"
-  Driver \"libinput\"
-  MatchDevicePath \"/dev/input/event*\"
-  MatchIsTouchpad \"on\"
-
-  Option \"Tapping\" \"on\"
-  Option \"TappingDrag\" \"on\"
-  Option \"DisableWhileTyping\" \"on\"
-  Option \"MiddleEmulation\" \"on\"
-  Option \"ScrollMethod\" \"twofinger\"
-  Option \"Natural Scrolling\" \"on\"
-EndSection
-Section \"InputClass\"
-  Identifier \"Keyboards\"
-  Driver \"libinput\"
-  MatchDevicePath \"/dev/input/event*\"
-  MatchIsKeyboard \"on\"
-EndSection
-")
-#+end_src
-**** TODO xorg screentearing-rule
-:: https://www.dedoimedo.com/computers/linux-intel-graphics-video-tearing.html
-
-#+begin_src scheme :tangle .config/guix/qzdl/rules.scm
-(define %xorg-intel-antitearing-base
-  "Section \"Device\"
-  Identifier \"Intel Graphics\"
-  Driver \"%s\"
-  Option \"TearFree\"    \"true\"
-EndSection")
-
-(define %xorg-intel-antitearing-i915
- (format #f %xorg-intel-antitearing-base "i915"))
-#+end_src
-
-***** find video driver
-#+begin_src shell :tangle no
-sudo lspci -k | grep -EA3 'VGA|3D|Display'
-#+end_src
-
-#+RESULTS:
-#+begin_example
-00:02.0 VGA compatible controller: Intel Corporation UHD Graphics 620 (Whiskey Lake) (rev 02)
-        Subsystem: Lenovo Device 2292
-        Kernel driver in use: i915
-00:04.0 Signal processing controller: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor Thermal Subsystem (rev 0c)
-#+end_example
-
-** =(qzdl services)=
-:PROPERTIES:
-:header-args: :tangle .config/guix/qzdl/services.scm
-:END:
-:: .config/guix/qzdl/services.scm
-file:./.doc/services.scm.png
-
-**** define
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define-module (qzdl services)
-  #:use-module (qzdl cosas)
-  #:use-module (qzdl rules)
-  #:use-module (srfi srfi-1)            ;; provides remove
-  #:use-module (gnu services)
-  #:use-module (gnu services base)
-  #:use-module (gnu services desktop)   ;; for udev
-  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
-  #:use-module (gnu services databases) ;; for postgres
-  #:use-module (gnu services desktop)   ;; FIXME %desktop-services is blote
-  #:use-module (gnu services docker)
-  #:use-module (gnu services networking)
-  #:use-module (gnu services virtualization)
-  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
-  #:export (my-libvirt-service
-            my-docker-service
-            my-bluetooth-service
-            ;;my-xorg-service
-            ;;my-network-manager-service
-            ;;my-ssh-service
-            my-postgresql-service
-            my-postgresql-role-service
-            my-login-service
-            %my-desktop-services))
-#+end_src
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
-#+end_src
-
-
-**** TODO xorg-service
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
- ;; X11
-              ;; (service slim-service-type
-              ;;    (slim-configuration
-              ;;     (xorg-configuration
-              ;;      (xorg-configuration
-              ;;       (keyboard-layout
-              ;;        (operating-system-keyboard-layout base-operating-system)
-              ;;        (extra-config (list %xorg-libinput-config)))))))
-#+end_src
-**** TODO bluetooth-service
-users must be in the =lp= group
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-bluetooth-service
-  (bluetooth-service #:auto-enable? #t))
-#+end_src
-
-**** TODO postgresql-service
-:: https://guix.gnu.org/manual/en/html_node/Database-Services.html
-
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-postgresql-role-service
-  (service postgresql-role-service-type
-   (postgresql-role-configuration
-    (roles
-     (list (postgresql-role
-            (name "postgres")
-            (create-database? #t))
-           (postgresql-role
-            (name "samuel")
-            (create-database? #t)))))))
-
-(define my-postgresql-service
-  (service postgresql-service-type))
-#+end_src
-**** TODO network-manager-service w/ openvpn
-**** TODO sshd service
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-
-#+end_src
-**** TODO homelab services
-**** TODO virtualisation; libvert
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-libvirt-service
-  (service libvirt-service-type
-           (libvirt-configuration
-            (unix-sock-group "libvirt")
-            (tls-port "16555"))))
-#+end_src
-**** TODO login manager
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-login-service
-  (service slim-service-type
-           (slim-configuration
-            (xorg-configuration
-             (xorg-configuration
-              (keyboard-layout my-keyboard-layout)
-              (extra-config (list %xorg-libinput-config
-                                  %xorg-intel-antitearing-i915)))))))
-#+end_src
-
-#+RESULTS:
-
-**** docker
-requires user & group
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-docker-service
-  (service docker-service-type))
-#+end_src
-**** TODO desktop
-should prolly split this out
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
-;; (define %my-desktop-services
-;;   (list (service slim-service-type
-;;                  (elogind-configuration
-;;                   (handle-lid-switch-external-power 'suspend)))
-;;         (service slim-service-type
-;;                  (udev-configuration
-;;                   (rules (list %udev-rule-backlight))))
-;;         (service slim-service-type
-;;                  (network-manager-configuration
-;;                   (vpn-plugins (list network-manager-openvpn))))))
-
-(define %my-desktop-services
-  (remove
-   (lambda (s) (eq? (service-kind s) gdm-service-type))
-  (modify-services %desktop-services
-                   (elogind-service-type config =>
-                                         (elogind-configuration (inherit config)
-                                                                (handle-lid-switch-external-power 'suspend)))
-                   (udev-service-type config =>
-                                      (udev-configuration (inherit config)
-                                                          (rules (cons %udev-rule-backlight
-                                                                       (udev-configuration-rules config)))))
-                   (network-manager-service-type config =>
-                                                 (network-manager-configuration (inherit config)
-                                                                                (vpn-plugins (list network-manager-openvpn)))))))
-#+end_src
-
 ** =(qzdl devices)=
 *** =(qzdl devices xps)= :@home:
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
+
+#+begin_src scheme :tangle .config/guix/qzdl/device/xps.scm
+(define-module (qzdl device xps))
+#+end_src
+
 *** =(qzdl devices donutrust)= :@work:
 :PROPERTIES:
 :header-args: :tangle .config/guix/qzdl/device/donutrust.scm
 :END:
+:: .config/guix/qzdl/device/donutrust.scm
 
 my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
 **** define
-#+begin_src scheme
+#+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
 (define-module (qzdl system donutrust)
  #:use-module (gnu)
+ #:use-module (gnu services databases)
  #:use-module (nongnu packages linux)
  #:use-module (qzdl system minimal))
 #+end_src
@@ -737,7 +1148,7 @@ my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa8
 test-load-file .config/guix/qzdl/device/donutrust.scm
 #+end_src
 **** operating system
-#+begin_src scheme
+#+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
 (operating-system
  (inherit minimal-operating-system)
  (host-name "donutrust")
@@ -753,13 +1164,10 @@ test-load-file .config/guix/qzdl/device/donutrust.scm
  (services
   (cons*
    (operating-system-services minimal-operating-system)
-   (service slim-service-type
-    (postgresql-role-configuration
-     (extensions (list (service-extension
-                        postgresql-role-service-type
-                        (const (postgresql-role
-                                (name "newstore")
-                                (create-database? #t))))))))))
+   (service-extension postgres-role-service-type
+                      (const (postgresql-role
+                              (name "newstore")
+                              (create-database? #t))))))
 
  (file-systems (cons*
                 (file-system
@@ -773,273 +1181,15 @@ test-load-file .config/guix/qzdl/device/donutrust.scm
                  (type "vfat"))
                 %base-file-systems)))
 #+end_src
+
 *** =(qzdl devices cleanpi)= :@home:
-#+begin_src scheme :tangle .config/guix/qzdl/device/xps.scm
-(define-module (qzdl device xps))
-#+end_src
-** =(qzdl packages)=
-:: .config/guix/qzdl/package
-
-*** manifest
-#+begin_src scheme :tangle .config/guix/qzdl/package/manifest.scm
-(specifications->manifest
-  (list "emacs-native-comp"
-        "mpv"
-        "ffmpeg"
-        "python-virtualenv"
-        "libgccjit"
-        "postgresql"
-        "docker-compose"
-        "docker"
-        "python-alembic"
-        "bluez-alsa"
-        "bluez"
-        "emacs-jedi"
-        "imagemagick"
-        "python-pywal"
-        "dunst"
-        "gnupg"
-        "curl"
-        "cmake"
-        "emacs-elpy"
-        "python-flake8"
-        "python-pip"
-        "python"
-        "python-pyzstd"
-        "recutils"
-        "ripgrep"
-        "gcc-toolchain"
-        "openssh"
-        "pulsemixer"
-        "emacs-guix"
-        "firefox"
-        "arandr"
-        "xrandr"
-        "cairo"
-        "pango"
-        "compton"
-        "icecat"
-        "nyxt"
-        "feh"
-        "xf86-input-libinput"
-        "xorg-server"
-        "xinit"
-        "xterm"
-        "xdg-utils"
-        "emacs-exwm"
-        "htop"
-        "noisetorch"
-        "emacs-prettier"
-        "tigervnc-client"
-        "xclip"
-        "dmenu"
-        "emacs-git-link"
-        "emacs-alert"
-        "filters"
-        "autoconf"
-        "rlwrap"
-        "readline"
-        "st"
-        "guile"
-        "setxkbmap"
-        "tar"
-        "xz"
-        "zlib"
-        "bzip2"
-        "glibc"
-        "font-fira-code"
-        "font-google-roboto"
-        "emacs-vterm"
-        "emacs-emacsql"
-        "make"
-        "sqlite"
-        "emacs-sqlite"
-        "font-dejavu"
-        "tree"
-        "font-gnu-unifont"
-        "xf86-video-fbdev"
-        "emacs-desktop-environment"))
-#+end_src
-*** v4l2loopback-linux-module
-virtual video devices; hijack the webcam feed, or stream an application though loopback
-*** mtools :core:
-:: [[https://www.gnu.org/software/mtools/][Mtools - GNU Project - Free Software Foundation]]
-*** dunst
-:: https://dunst-project.org/
-:: https://dunst-project.org/documentation
-
-**** notify-emacs.sh
-a script from u/deaddyfreddy, from
-https://reddit.com/r/emacs/comments/klsxwv/enabling_desktop_notifications_with_dunst_emacs/ghb17s2
-
-#+begin_src sh :tangle .config/dunst/notify-emacs.sh
-#!/bin/sh
-
-APPNAME="$1"
-SUMMARY="$2"
-BODY="$3"
-ICON="$4"
-URGENCY="$5"
-emacsclient -n --eval "(message \"${APPNAME}/${SUMMARY}: $BODY\")"
-#+end_src
-
-*** gnuzilla
-[[id:186a4daf-02ea-445b-9469-9909a5d7fb05][firefox]]
-*** emacs-native-comp :minimal:
-for development machines, gotta go fast
-
-*** emacs :core:
-*** python-3.6.4
-#+begin_src scheme :tangle .config/guix/qzdl/package/python-3.6.4.scm
-(define-public python-3.6
-  (package (inherit python-2)
-    (version "3.6.4")
-    (source (origin
-              (method url-fetch)
-              (uri (string-append "https://www.python.org/ftp/python/"
-                                  version "/Python-" version ".tar.xz"))
-              (patches (search-patches
-                        "python-fix-tests.patch"
-                        "python-3-fix-tests.patch"
-                        "python-3-deterministic-build-info.patch"
-                        "python-3-search-paths.patch"))
-              (patch-flags '("-p0"))
-              (sha256
-               (base32
-                "1fna7g8jxzl4kd2pqmmqhva5724c5m920x3fsrpsgskaylmr76qm"))
-              (snippet
-               '(begin
-                  (for-each delete-file
-                            '("Lib/ctypes/test/test_structures.py" ; fails on aarch64
-                              "Lib/ctypes/test/test_win32.py" ; fails on aarch64
-                              "Lib/test/test_fcntl.py")) ; fails on aarch64
-                  #t))))
-    ;; (arguments
-    ;;  (substitute-keyword-arguments (package-arguments python-2)
-    ;;    ((#:tests? _) #t)
-    ;;    ((#:phases phases)
-    ;;     `(modify-phases ,phases
-    ;;        (add-after 'unpack 'patch-timestamp-for-pyc-files
-    ;;          (lambda (_)
-    ;;            ;; We set DETERMINISTIC_BUILD to only override the mtime when
-    ;;            ;; building with Guix, lest we break auto-compilation in
-    ;;            ;; environments.
-    ;;            (setenv "DETERMINISTIC_BUILD" "1")
-    ;;            (substitute* "Lib/py_compile.py"
-    ;;              (("source_stats\\['mtime'\\]")
-    ;;               "(1 if 'DETERMINISTIC_BUILD' in os.environ else source_stats['mtime'])"))
-
-    ;;            ;; Use deterministic hashes for strings, bytes, and datetime
-    ;;            ;; objects.
-    ;;            (setenv "PYTHONHASHSEED" "0")
-
-    ;;            ;; Reset mtime when validating bytecode header.
-    ;;            (substitute* "Lib/importlib/_bootstrap_external.py"
-    ;;              (("source_mtime = int\\(source_stats\\['mtime'\\]\\)")
-    ;;               "source_mtime = 1"))
-    ;;            #t))
-    ;;        ;; These tests fail because of our change to the bytecode
-    ;;        ;; validation.  They fail because expected exceptions do not get
-    ;;        ;; thrown.  This seems to be no problem.
-    ;;        (add-after 'unpack 'disable-broken-bytecode-tests
-    ;;          (lambda
-    ;;            (substitute* "Lib/test/test_importlib/source/test_file_loader.py"
-    ;;              (("test_bad_marshal")
-    ;;               "disable_test_bad_marshal")
-    ;;              (("test_no_marshal")
-    ;;               "disable_test_no_marshal")
-    ;;              (("test_non_code_marshal")
-    ;;               "disable_test_non_code_marshal"))
-    ;;            #t))
-    ;;        ;; Unset DETERMINISTIC_BUILD to allow for tests that check that
-    ;;        ;; stale pyc files are rebuilt.
-    ;;        (add-before 'check 'allow-non-deterministic-compilation
-    ;;          (lambda _ (unsetenv "DETERMINISTIC_BUILD") #t))
-    ;;        ;; We need to rebuild all pyc files for three different
-    ;;        ;; optimization levels to replace all files that were not built
-    ;;        ;; deterministically.
-
-    ;;        ;; FIXME: Without this phase we have close to 2000 files that
-    ;;        ;; differ across different builds of this package.  With this phase
-    ;;        ;; there are about 500 files left that differ.
-    ;;        (add-after 'install 'rebuild-bytecode
-    ;;          (lambda* (#:key outputs #:allow-other-keys)
-    ;;            (setenv "DETERMINISTIC_BUILD" "1")
-    ;;            (let ((out (assoc-ref outputs "out")))
-    ;;              (for-each
-    ;;               (lambda (opt)
-    ;;                 (format #t "Compiling with optimization level: ~a\n"
-    ;;                         (if (null? opt) "none" (car opt)))
-    ;;                 (for-each (lambda (file)
-    ;;                             (apply invoke
-    ;;                                    `(,(string-append out "/bin/python3")
-    ;;                                      ,@opt
-    ;;                                      "-m" "compileall"
-    ;;                                      "-f" ; force rebuild
-    ;;                                      ;; Don't build lib2to3, because it's Python 2 code.
-    ;;                                      ;; Also don't build obviously broken test code.
-    ;;                                      "-x" "(lib2to3|test/bad.*)"
-    ;;                                      ,file)))
-    ;;                           (find-files out "\\.py$")))
-    ;;               (list '() '("-O") '("-OO"))))))))))
-
-    ;; (native-search-paths
-    ;;  (list (search-path-specification
-    ;;         (variable "PYTHONPATH")
-    ;;         (files (list (string-append "lib/python"
-    ;;                                     (version-major+minor version)
-    ;;                                     "/site-packages"))))))
-))
-#+end_src
-
-#+RESULTS:
-*** mvdan.cc/sh
-:: [[https://guix.gnu.org/manual/en/html_node/Invoking-guix-import.html][Invoking guix import (GNU Guix Reference Manual)]]
-:: [[https://github.com/mvdan/sh][GitHub: mvdan/sh]]
-:: [[https://pkg.go.dev/mvdan.cc/sh/v3][sh · pkg.go.dev]]
-
-#+begin_src scheme :tangle .config/guix/qzdl/package/go-mvdan-sh.scm
-;; <2021-08-11 Wed 13:33> `guix import go mvdan.cc/sh'
-(use-modules (guix packages)
-             (guix git-download)
-             (guix build-system go)
-             (guix licenses))
-
-
-
-(package
-    (name "go-mvdan-cc-sh")
-    (version "2.6.4+incompatible")
-    (source
-      (origin
-        (method git-fetch)
-        (uri (git-reference
-               (url "https://github.com/mvdan/sh")
-               (commit (go-version->git-ref version))))
-        (file-name (git-file-name name version))
-        (sha256
-          (base32
-            "1jifac0fi0sz6wzdgvk6s9xwpkdng2hj63ldbaral8n2j9km17hh"))))
-    (build-system go-build-system)
-    (arguments '(#:import-path "mvdan.cc/sh"))
-    (home-page "https://mvdan.cc/sh")
-    (synopsis "sh")
-    (description
-      "This package provides a shell parser, formatter and interpreter.  Supports @url{http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html,POSIX Shell}, @url{https://www.gnu.org/software/bash/,Bash} and
-@url{https://www.mirbsd.org/mksh.htm,mksh}.  Requires Go 1.10 or later.")
-    (license bsd-3))
-
-;;go-mvdan-cc-sh
-#+end_src
-
-*** python-pywal :rice:
-*** imagemagick
 
 ** shell
 :: .config/shell
 
 *** aliases
 #+begin_src shell :tangle .config/shell/aliases
+#!/bin/bash
 # system commands
 alias \
   ls='ls -p --color=auto' \
@@ -1076,6 +1226,7 @@ alias \
 #+end_src
 *** functions
 #+begin_src shell :tangle .config/shell/functions :results drawer
+#!/bin/bash
 qz-color() {
     echo -e "$1$2${qz_reset}"
 }
@@ -1150,6 +1301,7 @@ qz-get-aliases() {
 :end:
 *** variables
 #+begin_src shell :tangle .config/shell/variables
+#!/bin/bash
 export CONFIG_DIR="$HOME/.config"
 export CONFIG_DIR_SHELL="$CONFIG_DIR/shell"
 
@@ -1267,6 +1419,10 @@ fi
 # ESC[ 38;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB foreground color
 # ESC[ 48;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB background color
 **** TODO PS1
+:: [[http://www.unicode-symbol.com/u/2523.html][┣ - box drawings heavy vertical and right (u+2523)]]
+
+pretty funny rice tbh
+
 #+name: current PS1
 #+begin_example
 [18:41] [samuel : donutrust] [/home/samuel/dotfiles]↝
@@ -1297,13 +1453,16 @@ dice="🎲"
 end=$money
 break=""
 
-    PS1="\n┏━❨\A❩━❨\u@\h❩━❨\w❩$break"
+
+    PS1="\n┏━❨\A❩━❨\u@\h❩$break"
+PS1="$PS1\n┣━❨\w❩$break"
 PS1="$PS1\n┗━$GUIX_ENV_PS1$end "
 
 PS1=$PS1'\[$(vterm_prompt_end)\]'
 
 $HOME/.local/bin/unix
 #+end_src
+****
 **** TODO ascii
 ***** clippy
 #+begin_src bash :tangle .local/bin/clippy :tangle-mode (identity #o755)
@@ -1377,6 +1536,7 @@ eof
 
 *** .profile
 #+begin_src shell :tangle .config/shell/profile
+#!/bin/bash
 source $HOME/.config/shell/variables
 
 if [ -f ~/.bashrc ]; then . ~/.bashrc; fi
@@ -1427,8 +1587,38 @@ done;
 block "END: sourcing"
 #+end_src
 
+** guile
+:: .config/guile
+
+*** =.guile=
+#+begin_src scheme :tangle .guile
+(cond ((false-if-exception (resolve-interface '(ice-9 readline)))
+       =>
+       (lambda (module)
+         ;; Enable completion and input history at the REPL.
+         ((module-ref module 'activate-readline))))
+      (else
+       (display "Consider installing the 'guile-readline' package for
+convenient interactive line editing and input history.\n\n")))
+
+      (unless (getenv "INSIDE_EMACS")
+        (cond ((false-if-exception (resolve-interface '(ice-9 colorized)))
+               =>
+               (lambda (module)
+                 ;; Enable completion and input history at the REPL.
+                 ((module-ref module 'activate-colorized))))
+              (else
+               (display "Consider installing the 'guile-colorized' package
+for a colorful Guile experience.\n\n"))))
+
+;;; GNU Guix
+;(use-modules (guix) (guix hash) (guix build-system))
+;; add my custom src dir to loadpath
+(add-to-load-path "/home/samuel/.config/guix")
+#+end_src
+
+
 #+RESULTS:
-***
 
 ** channels
 :: [[https://guix.gnu.org/en/manual/en/html_node/Channels.html#Channels][Channels (GNU Guix Reference Manual)]]
@@ -1491,12 +1681,14 @@ guix specified by the given commit sha
 #+end_src
 
 #+RESULTS:
+
 * other
 ** local services hell
+#+begin_src shell
 sudo cryptsetup luksOpen /dev/sda1 xhdd
 sudo mount -o rw /dev/mapper/xhdd /media/xhdd
-
 sudo chown -R $USER /var/lib/sonarr/ /var/lib/radarr/ /usr/lib/radarr/ /usr/lib/sonarr/ /media/xhdd/ &&  sudo systemctl restart sonarr radarr  && sudo systemctl daemon-reload
+#+end_src
 ** xsession
 #+begin_src shell :tangle .emacs.d/start-exwm.sh
 #!/bin/sh
@@ -1538,24 +1730,17 @@ exec dbus-launch --exit-with-session emacs -mm --debug-init --use-exwm
 
 * merge conflict prolly
 ** .profile
-#+begin_src bash
+#+begin_src bash :tangle no
 # Adds `~/.scripts` and all subdirectories to $PATH
 export PATH="$PATH:$(du "$HOME/.scripts/" | cut -f2 | tr '\n' ':' | sed 's/:*$//'):~/.local/bin"
 export EDITOR="emacsclient -c -a emacs" # opens GUI
-export TERMINAL="st"
+export TERMINAL="emacsclient -c -e '(vterm)'"
 export BROWSER="firefox"
-export READER="zathura"
 export FILE="emacsclient -t -a emacs"
-export BIB="$HOME/Documents/LaTeX/uni.bib"
-export REFER="$HOME/Documents/referbib"
-export SUDO_ASKPASS="$HOME/.scripts/tools/dmenupass"
-export NOTMUCH_CONFIG="$HOME/.config/notmuch-config"
 export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
 export GDK_SCALE=2
 export GDK_DPI_SCALE=0.5
 #+end_src
-
-
 
 ** TODO emacs config as-a-package
 basically, to be able to update my emacs config with ~guix pull~
@@ -1586,13 +1771,120 @@ for file in $(find $HOME/.config/guix/) ; do
     df="$(basename $file)"
     echo "deps: running guild for deps of $file, to $df"
     guild use2dot $file > $df
+
     for driver in dot neato twopi circo fdp sfdp patchwork ; do
         dp="$df.png"
         echo "visualizing: $driver, for $df, to $dp"
-        $driver $df -Tpng -o $dp --over
+        $driver $df -Tpng -o $dp
     done
 done
 #+end_src
+
+#+RESULTS:
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/services.scm             | to services.scm      |                         |
+| visualizing: dot                                                                       | for services.scm     | to services.scm.png     |
+| visualizing: neato                                                                     | for services.scm     | to services.scm.png     |
+| visualizing: twopi                                                                     | for services.scm     | to services.scm.png     |
+| visualizing: circo                                                                     | for services.scm     | to services.scm.png     |
+| visualizing: fdp                                                                       | for services.scm     | to services.scm.png     |
+| visualizing: sfdp                                                                      | for services.scm     | to services.scm.png     |
+| visualizing: patchwork                                                                 | for services.scm     | to services.scm.png     |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/rules.scm                | to rules.scm         |                         |
+| visualizing: dot                                                                       | for rules.scm        | to rules.scm.png        |
+| visualizing: neato                                                                     | for rules.scm        | to rules.scm.png        |
+| visualizing: twopi                                                                     | for rules.scm        | to rules.scm.png        |
+| visualizing: circo                                                                     | for rules.scm        | to rules.scm.png        |
+| visualizing: fdp                                                                       | for rules.scm        | to rules.scm.png        |
+| visualizing: sfdp                                                                      | for rules.scm        | to rules.scm.png        |
+| visualizing: patchwork                                                                 | for rules.scm        | to rules.scm.png        |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/qzdl.scm                 | to qzdl.scm          |                         |
+| visualizing: dot                                                                       | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: neato                                                                     | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: twopi                                                                     | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: circo                                                                     | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: fdp                                                                       | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: sfdp                                                                      | for qzdl.scm         | to qzdl.scm.png         |
+| visualizing: patchwork                                                                 | for qzdl.scm         | to qzdl.scm.png         |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/base.scm          | to base.scm          |                         |
+| visualizing: dot                                                                       | for base.scm         | to base.scm.png         |
+| visualizing: neato                                                                     | for base.scm         | to base.scm.png         |
+| visualizing: twopi                                                                     | for base.scm         | to base.scm.png         |
+| visualizing: circo                                                                     | for base.scm         | to base.scm.png         |
+| visualizing: fdp                                                                       | for base.scm         | to base.scm.png         |
+| visualizing: sfdp                                                                      | for base.scm         | to base.scm.png         |
+| visualizing: patchwork                                                                 | for base.scm         | to base.scm.png         |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/install.scm       | to install.scm       |                         |
+| visualizing: dot                                                                       | for install.scm      | to install.scm.png      |
+| visualizing: neato                                                                     | for install.scm      | to install.scm.png      |
+| visualizing: twopi                                                                     | for install.scm      | to install.scm.png      |
+| visualizing: circo                                                                     | for install.scm      | to install.scm.png      |
+| visualizing: fdp                                                                       | for install.scm      | to install.scm.png      |
+| visualizing: sfdp                                                                      | for install.scm      | to install.scm.png      |
+| visualizing: patchwork                                                                 | for install.scm      | to install.scm.png      |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/minimal.scm       | to minimal.scm       |                         |
+| visualizing: dot                                                                       | for minimal.scm      | to minimal.scm.png      |
+| visualizing: neato                                                                     | for minimal.scm      | to minimal.scm.png      |
+| visualizing: twopi                                                                     | for minimal.scm      | to minimal.scm.png      |
+| visualizing: circo                                                                     | for minimal.scm      | to minimal.scm.png      |
+| visualizing: fdp                                                                       | for minimal.scm      | to minimal.scm.png      |
+| visualizing: sfdp                                                                      | for minimal.scm      | to minimal.scm.png      |
+| visualizing: patchwork                                                                 | for minimal.scm      | to minimal.scm.png      |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/manifest.scm     | to manifest.scm      |                         |
+| visualizing: dot                                                                       | for manifest.scm     | to manifest.scm.png     |
+| visualizing: neato                                                                     | for manifest.scm     | to manifest.scm.png     |
+| visualizing: twopi                                                                     | for manifest.scm     | to manifest.scm.png     |
+| visualizing: circo                                                                     | for manifest.scm     | to manifest.scm.png     |
+| visualizing: fdp                                                                       | for manifest.scm     | to manifest.scm.png     |
+| visualizing: sfdp                                                                      | for manifest.scm     | to manifest.scm.png     |
+| visualizing: patchwork                                                                 | for manifest.scm     | to manifest.scm.png     |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/python-3.6.4.scm | to python-3.6.4.scm  |                         |
+| visualizing: dot                                                                       | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: neato                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: twopi                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: circo                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: fdp                                                                       | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: sfdp                                                                      | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| visualizing: patchwork                                                                 | for python-3.6.4.scm | to python-3.6.4.scm.png |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/go-mvdan-sh.scm  | to go-mvdan-sh.scm   |                         |
+| visualizing: dot                                                                       | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: neato                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: twopi                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: circo                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: fdp                                                                       | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: sfdp                                                                      | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| visualizing: patchwork                                                                 | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/xps.scm           | to xps.scm           |                         |
+| visualizing: dot                                                                       | for xps.scm          | to xps.scm.png          |
+| visualizing: neato                                                                     | for xps.scm          | to xps.scm.png          |
+| visualizing: twopi                                                                     | for xps.scm          | to xps.scm.png          |
+| visualizing: circo                                                                     | for xps.scm          | to xps.scm.png          |
+| visualizing: fdp                                                                       | for xps.scm          | to xps.scm.png          |
+| visualizing: sfdp                                                                      | for xps.scm          | to xps.scm.png          |
+| visualizing: patchwork                                                                 | for xps.scm          | to xps.scm.png          |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/donutrust.scm     | to donutrust.scm     |                         |
+| visualizing: dot                                                                       | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: neato                                                                     | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: twopi                                                                     | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: circo                                                                     | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: fdp                                                                       | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: sfdp                                                                      | for donutrust.scm    | to donutrust.scm.png    |
+| visualizing: patchwork                                                                 | for donutrust.scm    | to donutrust.scm.png    |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/cosas.scm                | to cosas.scm         |                         |
+| visualizing: dot                                                                       | for cosas.scm        | to cosas.scm.png        |
+| visualizing: neato                                                                     | for cosas.scm        | to cosas.scm.png        |
+| visualizing: twopi                                                                     | for cosas.scm        | to cosas.scm.png        |
+| visualizing: circo                                                                     | for cosas.scm        | to cosas.scm.png        |
+| visualizing: fdp                                                                       | for cosas.scm        | to cosas.scm.png        |
+| visualizing: sfdp                                                                      | for cosas.scm        | to cosas.scm.png        |
+| visualizing: patchwork                                                                 | for cosas.scm        | to cosas.scm.png        |
+| deps: running guild for deps of /home/samuel//.config/guix/channels.scm                  | to channels.scm      |                         |
+| visualizing: dot                                                                       | for channels.scm     | to channels.scm.png     |
+| visualizing: neato                                                                     | for channels.scm     | to channels.scm.png     |
+| visualizing: twopi                                                                     | for channels.scm     | to channels.scm.png     |
+| visualizing: circo                                                                     | for channels.scm     | to channels.scm.png     |
+| visualizing: fdp                                                                       | for channels.scm     | to channels.scm.png     |
+| visualizing: sfdp                                                                      | for channels.scm     | to channels.scm.png     |
+| visualizing: patchwork                                                                 | for channels.scm     | to channels.scm.png     |
 
 
 * Footnotes

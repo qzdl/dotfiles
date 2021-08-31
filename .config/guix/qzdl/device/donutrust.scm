@@ -1,5 +1,6 @@
 (define-module (qzdl system donutrust)
  #:use-module (gnu)
+ #:use-module (gnu services databases)
  #:use-module (nongnu packages linux)
  #:use-module (qzdl system minimal))
 
@@ -18,13 +19,10 @@
  (services
   (cons*
    (operating-system-services minimal-operating-system)
-   (service slim-service-type
-    (postgresql-role-configuration
-     (extensions (list (service-extension
-                        postgresql-role-service-type
-                        (const (postgresql-role
-                                (name "newstore")
-                                (create-database? #t))))))))))
+   (service-extension postgres-role-service-type
+                      (const (postgresql-role
+                              (name "newstore")
+                              (create-database? #t))))))
 
  (file-systems (cons*
                 (file-system

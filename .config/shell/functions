@@ -1,3 +1,4 @@
+#!/bin/bash
 qz-color() {
     echo -e "$1$2${qz_reset}"
 }

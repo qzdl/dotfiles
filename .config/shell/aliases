@@ -1,3 +1,4 @@
+#!/bin/bash
 # system commands
 alias \
   ls='ls -p --color=auto' \

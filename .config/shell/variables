@@ -1,3 +1,4 @@
+#!/bin/bash
 export CONFIG_DIR="$HOME/.config"
 export CONFIG_DIR_SHELL="$CONFIG_DIR/shell"
 

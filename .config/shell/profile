@@ -1,3 +1,4 @@
+#!/bin/bash
 source $HOME/.config/shell/variables
 
 if [ -f ~/.bashrc ]; then . ~/.bashrc; fi

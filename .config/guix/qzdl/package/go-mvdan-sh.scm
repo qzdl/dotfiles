@@ -4,11 +4,9 @@
              (guix build-system go)
              (guix licenses))
 
-
-
 (package
     (name "go-mvdan-cc-sh")
-    (version "2.6.4+incompatible")
+    (version "2.6.4")
     (source
       (origin
         (method git-fetch)
