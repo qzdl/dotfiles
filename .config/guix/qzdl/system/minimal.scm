@@ -30,12 +30,13 @@
    (inherit base-operating-system)
 
    (services
-    (cons* my-libvirt-service
-           my-bluetooth-service
-           my-docker-service
-           my-login-service
-           %desktop-services
-           (operating-system-services base-operating-system)))
+    (append
+     %my-desktop-services
+     (cons* my-libvirt-service
+            my-bluetooth-service
+            my-docker-service
+            my-login-service
+            (operating-system-services base-operating-system))))
 
    (packages
     (cons* pulseaudio

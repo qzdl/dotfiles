@@ -13,13 +13,13 @@ qz-reverse() {
 
 # guix reconfigure, and debug to the repl
 qz-guix-reconfigure-debug()  {
-    sudo -E guix repl -L "$HOME/.config/guix";
+    sudo -E guix repl -L "$HOME/.config/guix" $@;
 }
 
 qz-guix-reconfigure()  {
     sudo -E guix system \
         -L "$HOME/.config/guix" \
-        reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm";
+        reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
 # guix profile commands; make it easy to switch and check

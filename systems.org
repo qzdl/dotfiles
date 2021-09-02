@@ -43,7 +43,7 @@ res=($(headline "Testing Results") )
 cd $MY_BASEPATH
 
 while getopts ":h" option; do
-    case $option in
+    case $option in #(((
         h)
             help
             exit;;
@@ -153,7 +153,7 @@ test-system.sh
 
 *** debug
 **** tree
-#+begin_src shell :results drawer
+#+begin_src shell :results drawer :tangle no
 tree $HOME/dotfiles/.config/guix
 #+end_src
 
@@ -163,9 +163,11 @@ tree $HOME/dotfiles/.config/guix
 ├── channels.scm
 ├── current -> /var/guix/profiles/per-user/samuel/current-guix
 └── qzdl
+    ├── cosas.scm
     ├── device
     │   ├── donutrust.scm
     │   └── xps.scm
+    ├── jobs.scm
     ├── package
     │   ├── go-mvdan-sh.scm
     │   ├── manifest.scm
@@ -178,8 +180,45 @@ tree $HOME/dotfiles/.config/guix
         ├── install.scm
         └── minimal.scm
 
-5 directories, 12 files
+5 directories, 14 files
 :end:
+**** tangled files
+#+begin_src shell :tangle no
+( for f in $(cat systems.org | grep ":tangle" | cut -d' ' -f4); do [ -f $f ] && echo $f; done; ) | sort | uniq
+#+end_src
+
+#+RESULTS:
+| .bashrc                                    |
+| .config/dunst/notify-emacs.sh              |
+| .config/guix/channels.scm                  |
+| .config/guix/qzdl/cosas.scm                |
+| .config/guix/qzdl/device/donutrust.scm     |
+| .config/guix/qzdl/device/xps.scm           |
+| .config/guix/qzdl/jobs.scm                 |
+| .config/guix/qzdl/package/go-mvdan-sh.scm  |
+| .config/guix/qzdl/package/manifest.scm     |
+| .config/guix/qzdl/package/python-3.6.4.scm |
+| .config/guix/qzdl/rules.scm                |
+| .config/guix/qzdl/services.scm             |
+| .config/guix/qzdl/system/install.scm       |
+| .config/guix/qzdl/system/minimal.scm       |
+| .config/shell/aliases                      |
+| .config/shell/functions                    |
+| .config/shell/profile                      |
+| .config/shell/variables                    |
+| .config/wget/wgetrc                        |
+| .doom.d/scripts/tangle-dotfiles.el         |
+| .emacs.d/docker-pyshell.sh                 |
+| .emacs.d/start-exwm.sh                     |
+| .guile                                     |
+| .local/bin/clippy                          |
+| .local/bin/deploy-dotfiles.sh              |
+| .local/bin/get-deps-qzdl.sh                |
+| .local/bin/maimpick                        |
+| .local/bin/test-helpers.sh                 |
+| .local/bin/test-system.sh                  |
+| .local/bin/unix                            |
+| .local/bin/update-dotfiles.sh              |
 
 ** =(qzdl cosas)=
 :PROPERTIES:
@@ -443,20 +482,20 @@ should prolly split this out
 ;;                  (network-manager-configuration
 ;;                   (vpn-plugins (list network-manager-openvpn))))))
 
-(define %my-desktop-services %desktop-services)
-  ;; (remove
-  ;;  (lambda (s) (eq? (service-kind s) gdm-service-type))
-  ;; (modify-services %desktop-services
-  ;;                  (elogind-service-type config =>
-  ;;                                        (elogind-configuration (inherit config)
-  ;;                                                               (handle-lid-switch-external-power 'suspend)))
-  ;;                  (udev-service-type config =>
-  ;;                                     (udev-configuration (inherit config)
-  ;;                                                         (rules (cons %udev-rule-backlight
-  ;;                                                                      (udev-configuration-rules config)))))
-  ;;                  (network-manager-service-type config =>
-  ;;                                                (network-manager-configuration (inherit config)
-  ;;                                                                               (vpn-plugins (list network-manager-openvpn)))))))
+(define %my-desktop-services
+  (remove
+   (lambda (s) (eq? (service-kind s) gdm-service-type))
+  (modify-services %desktop-services
+                   (elogind-service-type config =>
+                                         (elogind-configuration (inherit config)
+                                                                (handle-lid-switch-external-power 'suspend)))
+                   (udev-service-type config =>
+                                      (udev-configuration (inherit config)
+                                                          (rules (cons %udev-rule-backlight
+                                                                       (udev-configuration-rules config)))))
+                   (network-manager-service-type config =>
+                                                 (network-manager-configuration (inherit config)
+                                                                                (vpn-plugins (list network-manager-openvpn)))))))
 #+end_src
 
 ** =(qzdl package)=
@@ -831,9 +870,283 @@ in @url{https://editorconfig.org/,https://editorconfig.org/}.
 
 ;;go-mvdan-cc-sh
 #+end_src
+
 *** (or equiv [[https://github.com/Versent/saml2aws][GitHub - Versent/saml2aws: CLI tool which enables you to login and retrieve A...]])
+
+**** dirty path; get github binary
+
+#+begin_src shell :tangle no
+CURRENT_VERSION=$(curl -Ls https://api.github.com/repos/Versent/saml2aws/releases/latest | grep 'tag_name' | cut -d'v' -f2 | cut -d'"' -f1)
+wget -c https://github.com/Versent/saml2aws/releases/download/v${CURRENT_VERSION}/saml2aws_${CURRENT_VERSION}_linux_amd64.tar.gz -O - | tar -xzv -C ~/.local/bin
+chmod u+x ~/.local/bin/saml2aws
+hash -r
+saml2aws --version
+#+end_src
+
+#+RESULTS:
+| LICENSE.md |
+| README.md  |
+| saml2aws   |
+*** * configuring
+#+begin_src bash
+YOUR_ORGANISATION="newstore-sso"
+OKTA_APPLICATION_ID=""
+OKTA_OTHER_ID=""
+echo "https://$YOUR_ORGANIZATION.okta.com/home/amazon_aws/$OKTA_APPLICATION_ID/$OKTA_OTHER_ID"
+https://newstore-sso.okta.com/home/amazon_aws/0oa15tj4i1PRzffRm357/272?fromHome=true
+#+end_src
+
+#+RESULTS:
+
 *** (or equiv [[https://github.com/derailed/k9s][GitHub - derailed/k9s: 🐶 Kubernetes CLI To Manage Your Clusters In Style!]])
 :: [[https://github.com/kubernetes-el/kubernetes-el][GitHub - kubernetes-el/kubernetes-el: Emacs porcelain for Kubernetes.]]
+*** kubernetes
+
+#+begin_src bash :results drawer
+date
+guix import go github.com/kubernetes/kubernetes
+#+end_src
+
+#+RESULTS:
+:results:
+Wed 01 Sep 2021 10:35:36 AM CEST
+yo
+:end:
+
+ (package
+    (name "go-github-com-kubernetes-kubernetes")
+    (version "1.22.1")
+    (source
+      (origin
+        (method git-fetch)
+        (uri (git-reference
+               (url "https://github.com/kubernetes/kubernetes")
+               (commit (string-append "v" version))))
+        (file-name (git-file-name name version))
+        (sha256
+          (base32
+            "07b1sg2s4zlpma8g062l29sm761q98cp6jfl8wsz990c2vw16l6a"))))
+    (build-system go-build-system)
+    (arguments
+      '(#:import-path
+        "github.com/kubernetes/kubernetes"))
+    (propagated-inputs
+      `(("go-sigs-k8s-io-yaml" ,go-sigs-k8s-io-yaml)
+        ("go-sigs-k8s-io-structured-merge-diff-v4"
+         ,go-sigs-k8s-io-structured-merge-diff-v4)
+        ("go-k8s-io-utils" ,go-k8s-io-utils)
+        ("go-k8s-io-system-validators"
+         ,go-k8s-io-system-validators)
+        ("go-k8s-io-kube-openapi"
+         ,go-k8s-io-kube-openapi)
+        ("go-k8s-io-klog-v2" ,go-k8s-io-klog-v2)
+        ("go-k8s-io-gengo" ,go-k8s-io-gengo)
+        ("go-gopkg-in-yaml-v2" ,go-gopkg-in-yaml-v2)
+        ("go-gopkg-in-square-go-jose-v2"
+         ,go-gopkg-in-square-go-jose-v2)
+        ("go-gopkg-in-gcfg-v1" ,go-gopkg-in-gcfg-v1)
+        ("go-google-golang-org-protobuf"
+         ,go-google-golang-org-protobuf)
+        ("go-google-golang-org-grpc"
+         ,go-google-golang-org-grpc)
+        ("go-google-golang-org-genproto"
+         ,go-google-golang-org-genproto)
+        ("go-google-golang-org-appengine"
+         ,go-google-golang-org-appengine)
+        ("go-google-golang-org-api"
+         ,go-google-golang-org-api)
+        ("go-gonum-org-v1-netlib"
+         ,go-gonum-org-v1-netlib)
+        ("go-gonum-org-v1-gonum" ,go-gonum-org-v1-gonum)
+        ("go-golang-org-x-tools" ,go-golang-org-x-tools)
+        ("go-golang-org-x-time" ,go-golang-org-x-time)
+        ("go-golang-org-x-term" ,go-golang-org-x-term)
+        ("go-golang-org-x-sys" ,go-golang-org-x-sys)
+        ("go-golang-org-x-sync" ,go-golang-org-x-sync)
+        ("go-golang-org-x-oauth2"
+         ,go-golang-org-x-oauth2)
+        ("go-golang-org-x-net" ,go-golang-org-x-net)
+        ("go-golang-org-x-exp" ,go-golang-org-x-exp)
+        ("go-golang-org-x-crypto"
+         ,go-golang-org-x-crypto)
+        ("go-go-opentelemetry-io-proto-otlp"
+         ,go-go-opentelemetry-io-proto-otlp)
+        ("go-go-opentelemetry-io-otel-trace"
+         ,go-go-opentelemetry-io-otel-trace)
+        ("go-go-opentelemetry-io-otel-sdk"
+         ,go-go-opentelemetry-io-otel-sdk)
+        ("go-go-etcd-io-etcd-client-v3"
+         ,go-go-etcd-io-etcd-client-v3)
+        ("go-go-etcd-io-etcd-client-pkg-v3"
+         ,go-go-etcd-io-etcd-client-pkg-v3)
+        ("go-github-com-vmware-govmomi"
+         ,go-github-com-vmware-govmomi)
+        ("go-github-com-vishvananda-netlink"
+         ,go-github-com-vishvananda-netlink)
+        ("go-github-com-stretchr-testify"
+         ,go-github-com-stretchr-testify)
+        ("go-github-com-storageos-go-api"
+         ,go-github-com-storageos-go-api)
+        ("go-github-com-spf13-pflag"
+         ,go-github-com-spf13-pflag)
+        ("go-github-com-spf13-cobra"
+         ,go-github-com-spf13-cobra)
+        ("go-github-com-robfig-cron-v3"
+         ,go-github-com-robfig-cron-v3)
+        ("go-github-com-quobyte-api"
+         ,go-github-com-quobyte-api)
+        ("go-github-com-prometheus-common"
+         ,go-github-com-prometheus-common)
+        ("go-github-com-prometheus-client-model"
+         ,go-github-com-prometheus-client-model)
+        ("go-github-com-prometheus-client-golang"
+         ,go-github-com-prometheus-client-golang)
+        ("go-github-com-pmezard-go-difflib"
+         ,go-github-com-pmezard-go-difflib)
+        ("go-github-com-pkg-errors"
+         ,go-github-com-pkg-errors)
+        ("go-github-com-opencontainers-selinux"
+         ,go-github-com-opencontainers-selinux)
+        ("go-github-com-opencontainers-runc"
+         ,go-github-com-opencontainers-runc)
+        ("go-github-com-opencontainers-go-digest"
+         ,go-github-com-opencontainers-go-digest)
+        ("go-github-com-onsi-gomega"
+         ,go-github-com-onsi-gomega)
+        ("go-github-com-onsi-ginkgo"
+         ,go-github-com-onsi-ginkgo)
+        ("go-github-com-mvdan-xurls"
+         ,go-github-com-mvdan-xurls)
+        ("go-github-com-munnerz-goautoneg"
+         ,go-github-com-munnerz-goautoneg)
+        ("go-github-com-mrunalp-fileutils"
+         ,go-github-com-mrunalp-fileutils)
+        ("go-github-com-mohae-deepcopy"
+         ,go-github-com-mohae-deepcopy)
+        ("go-github-com-moby-ipvs"
+         ,go-github-com-moby-ipvs)
+        ("go-github-com-lpabon-godbc"
+         ,go-github-com-lpabon-godbc)
+        ("go-github-com-lithammer-dedent"
+         ,go-github-com-lithammer-dedent)
+        ("go-github-com-libopenstorage-openstorage"
+         ,go-github-com-libopenstorage-openstorage)
+        ("go-github-com-json-iterator-go"
+         ,go-github-com-json-iterator-go)
+        ("go-github-com-ishidawataru-sctp"
+         ,go-github-com-ishidawataru-sctp)
+        ("go-github-com-heketi-tests"
+         ,go-github-com-heketi-tests)
+        ("go-github-com-heketi-heketi"
+         ,go-github-com-heketi-heketi)
+        ("go-github-com-googleapis-gnostic"
+         ,go-github-com-googleapis-gnostic)
+        ("go-github-com-google-uuid"
+         ,go-github-com-google-uuid)
+        ("go-github-com-google-gofuzz"
+         ,go-github-com-google-gofuzz)
+        ("go-github-com-google-go-cmp"
+         ,go-github-com-google-go-cmp)
+        ("go-github-com-google-cadvisor"
+         ,go-github-com-google-cadvisor)
+        ("go-github-com-golang-protobuf"
+         ,go-github-com-golang-protobuf)
+        ("go-github-com-golang-mock"
+         ,go-github-com-golang-mock)
+        ("go-github-com-golang-groupcache"
+         ,go-github-com-golang-groupcache)
+        ("go-github-com-gogo-protobuf"
+         ,go-github-com-gogo-protobuf)
+        ("go-github-com-godbus-dbus-v5"
+         ,go-github-com-godbus-dbus-v5)
+        ("go-github-com-go-ozzo-ozzo-validation"
+         ,go-github-com-go-ozzo-ozzo-validation)
+        ("go-github-com-fsnotify-fsnotify"
+         ,go-github-com-fsnotify-fsnotify)
+        ("go-github-com-evanphx-json-patch"
+         ,go-github-com-evanphx-json-patch)
+        ("go-github-com-emicklei-go-restful"
+         ,go-github-com-emicklei-go-restful)
+        ("go-github-com-elazarl-goproxy"
+         ,go-github-com-elazarl-goproxy)
+        ("go-github-com-docker-go-units"
+         ,go-github-com-docker-go-units)
+        ("go-github-com-docker-go-connections"
+         ,go-github-com-docker-go-connections)
+        ("go-github-com-docker-docker"
+         ,go-github-com-docker-docker)
+        ("go-github-com-docker-distribution"
+         ,go-github-com-docker-distribution)
+        ("go-github-com-davecgh-go-spew"
+         ,go-github-com-davecgh-go-spew)
+        ("go-github-com-cpuguy83-go-md2man-v2"
+         ,go-github-com-cpuguy83-go-md2man-v2)
+        ("go-github-com-coreos-go-systemd-v22"
+         ,go-github-com-coreos-go-systemd-v22)
+        ("go-github-com-coreos-go-oidc"
+         ,go-github-com-coreos-go-oidc)
+        ("go-github-com-coredns-corefile-migration"
+         ,go-github-com-coredns-corefile-migration)
+        ("go-github-com-containernetworking-cni"
+         ,go-github-com-containernetworking-cni)
+        ("go-github-com-container-storage-interface-spec"
+         ,go-github-com-container-storage-interface-spec)
+        ("go-github-com-clusterhq-flocker-go"
+         ,go-github-com-clusterhq-flocker-go)
+        ("go-github-com-boltdb-bolt"
+         ,go-github-com-boltdb-bolt)
+        ("go-github-com-blang-semver"
+         ,go-github-com-blang-semver)
+        ("go-github-com-aws-aws-sdk-go"
+         ,go-github-com-aws-aws-sdk-go)
+        ("go-github-com-auth0-go-jwt-middleware"
+         ,go-github-com-auth0-go-jwt-middleware)
+        ("go-github-com-armon-circbuf"
+         ,go-github-com-armon-circbuf)
+        ("go-github-com-puerkitobio-purell"
+         ,go-github-com-puerkitobio-purell)
+        ("go-github-com-microsoft-hcsshim"
+         ,go-github-com-microsoft-hcsshim)
+        ("go-github-com-microsoft-go-winio"
+         ,go-github-com-microsoft-go-winio)
+        ("go-github-com-jeffashton-win-pdh"
+         ,go-github-com-jeffashton-win-pdh)
+        ("go-github-com-googlecloudplatform-k8s-cloud-provider"
+         ,go-github-com-googlecloudplatform-k8s-cloud-provider)
+        ("go-github-com-azure-go-autorest-autorest-to"
+         ,go-github-com-azure-go-autorest-autorest-to)
+        ("go-github-com-azure-go-autorest-autorest-adal"
+         ,go-github-com-azure-go-autorest-autorest-adal)
+        ("go-github-com-azure-go-autorest-autorest"
+         ,go-github-com-azure-go-autorest-autorest)
+        ("go-github-com-azure-azure-sdk-for-go"
+         ,go-github-com-azure-azure-sdk-for-go)
+        ("go-bitbucket-org-bertimus9-systemstat"
+         ,go-bitbucket-org-bertimus9-systemstat)))
+    (home-page
+      "https://github.com/kubernetes/kubernetes")
+    (synopsis "Kubernetes")
+    (description
+      "Kubernetes is an open source system for managing @url{https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/,containerized applications}
+across multiple hosts; providing basic mechanisms for deployment, maintenance,
+and scaling of applications.")
+    (license license:asl2.0)))
+
+
+*** kubectl
+ew hacky binary
+#+begin_src shell :tangle no :results drawer
+cd /tmp/ && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x kubectl
+mv kubectl ~/.local/bin/kubectl
+kubectl version --client
+#+end_src
+
+#+RESULTS:
+:results:
+Client Version: version.Info{Major:"1", Minor:"22", GitVersion:"v1.22.1", GitCommit:"632ed300f2c34f6d6d15ca4cef3d3c7073412212", GitTreeState:"clean", BuildDate:"2021-08-19T15:45:37Z", GoVersion:"go1.16.7", Compiler:"gc", Platform:"linux/amd64"}
+:end:
+
 *** python-pywal :rice:
 *** imagemagick
 *** recoll
@@ -855,16 +1168,29 @@ created using modules, as described:
   - will #:use-module (gnu packages emacs) install a package ~emacs~? or make the build/sub available?
   - how can i build packages for an installation?
   - how does a manifest relate to [ module(gnu package emacs)-> packages(emacs-no-x-toolkite) || manifest emacs-no-x-toolkit@28.1 ] ?
+*** debugging
+**** excpecting struct in whatever
+#+begin_src scheme
+,use (gnu system)
+,use (qzdl system minimal)
+,use (ice-9 pprint)
 
-*** =(qzdl system base)= :file:
+(handler #t
+         (pprint (operating-system-services minimal-operating-system)))
+#+end_src
+
+#+RESULTS:
+
+*** (qzdl system base)= :file:
 :PROPERTIES:
 :ID:       61f53bfc-e34f-42ac-9dea-6f5e57f9a056
 :header-args: :tangle .config/guix/qzdl/system/base.scm
 :ROAM_ALIASES: "guix base system"
 :END:
 ::  .config/guix/qzdl/system/base.scm
+
 ***** define
-#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
+#+begin_src scheme :tangle .config/guix/qzdl/system/base.scm
 (define-module (qzdl system base)
   #:use-module (qzdl cosas)
   #:use-module (gnu)
@@ -889,11 +1215,11 @@ created using modules, as described:
 test-load-file .config/guix/qzdl/system/base.scm
 #+end_src
 ***** package modules
-#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
+#+begin_src scheme :tangle .config/guix/qzdl/system/base.scm
 (use-package-modules certs)
 (use-package-modules shells)
 #+end_src
-***** base-operating-system
+***** operating-system
 :: [[https://guix.gnu.org/en/manual/en/html_node/operating_002dsystem-Reference.html#operating_002dsystem-Reference][operating-system Reference (GNU Guix Reference Manual)]]
 :: [[https://guix.gnu.org/en/manual/en/html_node/Using-the-Configuration-System.html][Using the Configuration System (GNU Guix Reference Manual)]]
 
@@ -920,7 +1246,7 @@ and intel ucode images to the bootloader config in initrd.
 
 :: [[https://guix.gnu.org/en/manual/en/html_node/Keyboard-Layout.html][Keyboard Layout (GNU Guix Reference Manual)]]
 - 'model' comes from ~share/X11/xkb~ of package ~xkeyboard-config~
-#+begin_src scheme :tangle  .config/guix/qzdl/system/base.scm
+#+begin_src scheme :tangle .config/guix/qzdl/system/base.scm
 (define base-operating-system
   (operating-system
    (host-name "unconf")
@@ -1055,12 +1381,13 @@ test-load-file .config/guix/qzdl/system/minimal.scm
    (inherit base-operating-system)
 
    (services
-    (cons* my-libvirt-service
-           my-bluetooth-service
-           my-docker-service
-           my-login-service
-           %desktop-services
-           (operating-system-services base-operating-system)))
+    (append
+     %my-desktop-services
+     (cons* my-libvirt-service
+            my-bluetooth-service
+            my-docker-service
+            my-login-service
+            (operating-system-services base-operating-system))))
 
    (packages
     (cons* pulseaudio
@@ -1073,6 +1400,7 @@ test-load-file .config/guix/qzdl/system/minimal.scm
 #+end_src
 *** =(qzdl system install)= :file:
 :: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
+:: .config/guix/qzdl/system/install.scm
 
 #+begin_src scheme :tangle .config/guix/qzdl/system/install.scm
 ;;; Copyright © 2019 Alex Griffin <a@ajgrf.com>
@@ -1119,6 +1447,7 @@ test-load-file .config/guix/qzdl/system/minimal.scm
 
 installation-os-nonfree
 #+end_src
+
 ** =(qzdl devices)=
 *** =(qzdl devices xps)= :@home:
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
@@ -1137,49 +1466,65 @@ my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa8
 
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
-(define-module (qzdl system donutrust)
- #:use-module (gnu)
- #:use-module (gnu services databases)
- #:use-module (nongnu packages linux)
- #:use-module (qzdl system minimal))
+(define-module (qzdl device donutrust)
+  #:use-module (srfi srfi-1)
+  #:use-module (gnu)
+  #:use-module (gnu services databases)
+  #:use-module (nongnu packages linux)
+  #:use-module (qzdl system minimal)
+  #:export (donutrust-operating-system))
 #+end_src
+
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
 test-load-file .config/guix/qzdl/device/donutrust.scm
 #+end_src
+
 **** operating system
 #+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
-(operating-system
- (inherit minimal-operating-system)
- (host-name "donutrust")
+(define donutrust-operating-system
+  (operating-system
+    (inherit minimal-operating-system)
+    (host-name "donutrust")
 
- (firmware (list linux-firmware sof-firmware))
+    (firmware (list linux-firmware sof-firmware))
 
- (mapped-devices
-  (list (mapped-device
-         (source (uuid "c9042f21-04bd-48ff-9295-5e314f1d4b37"))
-         (target "sys-root")
-         (type luks-device-mapping))))
+    (services
+     (delete-duplicates
+      (operating-system-services minimal-operating-system)))
 
- (services
-  (cons*
-   (operating-system-services minimal-operating-system)
-   (service-extension postgres-role-service-type
-                      (const (postgresql-role
-                              (name "newstore")
-                              (create-database? #t))))))
+    (mapped-devices
+     (list (mapped-device
+            (source (uuid "c9042f21-04bd-48ff-9295-5e314f1d4b37"))
+            (target "sys-root")
+            (type luks-device-mapping))))
 
- (file-systems (cons*
-                (file-system
-                 (device (file-system-label "sys-root"))
-                 (mount-point "/")
-                 (type "ext4")
-                 (dependencies mapped-devices))
-                (file-system
-                 (device "/dev/nvme0n1p1")
-                 (mount-point "/boot/efi")
-                 (type "vfat"))
-                %base-file-systems)))
+
+    (file-systems
+     (cons*
+      (file-system
+        (device (file-system-label "sys-root"))
+        (mount-point "/")
+        (type "ext4")
+        (dependencies mapped-devices))
+      (file-system
+        (device "/dev/nvme0n1p1")
+        (mount-point "/boot/efi")
+        (type "vfat"))
+      %base-file-systems))
+
+    ;; (services
+    ;;  (cons*
+       ;; (simple-service 'postgres-roles
+       ;;                 postgresql-role-service-type
+       ;;                 (list (const (postgresql-role
+       ;;                               (name "newstore")
+       ;;                               (create-database? #t)))))
+       ;; (operating-system-services minimal-operating-system)))
+
+  ))
+
+donutrust-operating-system
 #+end_src
 
 *** =(qzdl devices cleanpi)= :@home:
@@ -1241,13 +1586,13 @@ qz-reverse() {
 
 # guix reconfigure, and debug to the repl
 qz-guix-reconfigure-debug()  {
-    sudo -E guix repl -L "$HOME/.config/guix";
+    sudo -E guix repl -L "$HOME/.config/guix" $@;
 }
 
 qz-guix-reconfigure()  {
     sudo -E guix system \
         -L "$HOME/.config/guix" \
-        reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm";
+        reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
 # guix profile commands; make it easy to switch and check
@@ -1586,6 +1931,40 @@ done;
 
 block "END: sourcing"
 #+end_src
+** scripts
+*** TODO screenshot
+#+begin_src shell :tangle .local/bin/maimpick
+#!/bin/sh
+# creds to baldy luke smith
+
+DIR_SCREENSHOTS="${HOME}/screenshots"
+
+sname="${DIR_SCREENSHOTS}"/pic-selected-"$(date '+%y%m%d-%H%M-%S').png"
+
+(
+case "$(printf "a selected area\\ncurrent window\\nfull screen\\na selected area (copy)\\ncurrent window (copy)\\nfull screen (copy)\\na selected area (copy-path)" | dmenu -l 6 -i -p "Screenshot which area?")" in
+    "a selected area") maim -s pic-selected-"$(date '+%y%m%d-%H%M-%S').png" ;;
+    "current window") maim -i "$(xdotool getactivewindow)" pic-window-"$(date '+%y%m%d-%H%M-%S').png" ;;
+    "full screen") maim pic-full-"$(date '+%y%m%d-%H%M-%S').png" ;;
+    "a selected area (copy)") maim -s | xclip -selection clipboard -t image/png ;;
+    "current window (copy)") maim -i "$(xdotool getactivewindow)" | xclip -selection clipboard -t image/png ;;
+    "full screen (copy)") maim | xclip -selection clipboard -t image/png ;;
+    "a selected area (copy-path)") maim -s $sname && echo $sname | xclip -selection clipboard -t text ;;
+esac
+) && echo $sname
+#+end_src
+*** TODO screenrecord
+:: check ~/dotfiles/scripts/.scripts/i3cmds/dmenurecord
+**** gif
+
+** wget
+*** wgetrc
+:: .config/wget/wgetrc
+#+begin_src shell :tangle .config/wget/wgetrc
+hsts-file=~/.cache/wget-hsts
+#+end_src
+
+#+RESULTS:
 
 ** guile
 :: .config/guile
@@ -1749,14 +2128,31 @@ basically, to be able to update my emacs config with ~guix pull~
 docker run -it -v /tmp:/tmp -v $HOME/git ufoym/deepo python3
 #+end_src
 
-** TODO final test outputs
-#+begin_src shell :tangle no
-# .local/bin/test-system.sh
-for line in $res ; do
-    echo hey
-    echo $line
-done
+*** eva
+#+begin_src emacs-lisp :tangle no
+(package! eva
+  :recipe (:host github :repo "meedstrom/eva"
+           :files (:defaults "assets"  "renv" "*.R" "*.gnuplot")))
 #+end_src
+
+**** guix
+#+begin_src scheme
+r
+gnuplot
+xprint
+#+end_src
+**** emacs
+recommends "Selectrum"
+[[info:(eva) Soft requirements:10][Infopage for (eva) Soft requirements]]
+
+*** xprintidle
+:: https://github.com/g0hl1n/xprintidle
+:: [[https://guix.gnu.org/manual/en/html_node/Build-Systems.html#index-meson_002dbuild_002dsystem][Build Systems - Meson (GNU Guix Reference Manual)]]
+
+**** TODO upstream
+makes me think about how the shared proceeds of selfish interests are utility.
+
+says nothing about how it's maintained in the future
 
 * docs, analysis
 
@@ -1885,6 +2281,9 @@ done
 | visualizing: fdp                                                                       | for channels.scm     | to channels.scm.png     |
 | visualizing: sfdp                                                                      | for channels.scm     | to channels.scm.png     |
 | visualizing: patchwork                                                                 | for channels.scm     | to channels.scm.png     |
+
+
+[[file:~/life/roam/daily/private-2021-08-12.org::*long table names, if statically aliased, should be done in imports][ong table names, if statically aliased, should be done in imports]]
 
 
 * Footnotes
