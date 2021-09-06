@@ -1,5 +1,6 @@
 (define-module (qzdl system base)
   #:use-module (qzdl cosas)
+  #:use-module (qzdl services)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -23,7 +24,7 @@
    (timezone "Europe/Berlin")
    (locale "en_US.UTF-8")
 
-   ;; nonfree kernel
+   ;; nonfree kernel :(
    (kernel linux)
    (firmware (list linux-firmware))
    (initrd microcode-initrd)
@@ -35,27 +36,32 @@
    (keyboard-layout my-keyboard-layout)
 
    ;; UEFI+GRUB
-   (bootloader (bootloader-configuration
-                (bootloader grub-efi-bootloader)
-                (target "/boot/efi")
-                (keyboard-layout keyboard-layout)))
+   (bootloader
+    (bootloader-configuration
+     (bootloader grub-efi-bootloader)
+     (target "/boot/efi")
+     (keyboard-layout keyboard-layout)))
 
-   ;; base user
-   (users (cons (user-account
-                 (name "samuel")
-                 (comment "it me")
-                 (group "users")
-                 (home-directory "/home/samuel/")
-                 (supplementary-groups '("wheel"     ;; sudo
-                                         "netdev"    ;; network devices
-                                         "kvm"       ;; virtualisation
-                                         "tty"
-                                         "input"
-                                         "lp"        ;; control bluetooth devices
-                                         "audio"     ;; control audio devices
-                                         "video"     ;; control video devices
-                                         "docker")))
-                %base-user-accounts))
+   (users
+    (cons (user-account
+           (name "samuel")
+           (comment "it me")
+           (group "users")
+           (home-directory "/home/samuel/")
+           (supplementary-groups '("wheel"     ;; sudo
+                                   "netdev"    ;; network devices
+                                   "kvm"       ;; virtualisation
+                                   "tty"
+                                   "input"
+                                   "lp"        ;; control bluetooth devices
+                                   "audio"     ;; control audio devices
+                                   "video"     ;; control video devices
+                                   "docker")))
+          %base-user-accounts))
+
+   (groups
+    (cons (user-group (name "docker"))
+          %base-groups))
 
    ;; OVERWRITE THIS WHEN INHERITING
    ;;   AN ARTIFACT OF INCIDENTAL COMPLEXITY IN GUIX
@@ -67,25 +73,17 @@
                    (check? #f))
                   %base-file-systems))
 
-   (packages (append (list
-                      git
-                      stow
-                      emacs
-                      vim
-                      ;;openvpn
-                      nss-certs
-                      ;; fs utils
-                      ;;gvfs
-                      ;;fuse-exfat
-                      ;;exfat-utils
-                      )
-                     %base-packages))
+   (services
+    (cons* my-docker-service
+           (extra-special-file
+            "/usr/bin/env"
+            (file-append coreutils "/bin/env"))
+           %base-services))
 
-   ;; Use the "desktop" services, which include the X11 log-in service,
-   ;; networking with NetworkManager, and more
-   (services (append (list (service docker-service-type)
-                           (extra-special-file "/usr/bin/env"
-                                               (file-append coreutils "/bin/env"))
-                           ;(service thermald-service-type)
-                           )
-                     %base-services)))) ;; TODO INSPECT %base-services
+   (packages
+    (cons* git
+           stow
+           emacs
+           vim
+           nss-certs
+           %base-packages))))

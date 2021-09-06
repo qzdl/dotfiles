@@ -1,7 +1,8 @@
 (define-module (qzdl jobs)
   #:use-module (gnu)
   #:use-module (guix)
-  #:use-module (gnu services mcron))
+  #:use-module (gnu services mcron)
+  #:export (updatedb-job))
 
 (define updatedb-job
   ;; Run 'updatedb' at 3AM every day.  Here we write the
@@ -11,3 +12,7 @@
            (execl (string-append #$findutils "/bin/updatedb")
                   "updatedb"
                   "--prunepaths=/tmp /var/tmp /gnu/store"))))
+
+(define autocommit-job
+  #~(job )
+    )

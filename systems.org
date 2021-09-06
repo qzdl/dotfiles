@@ -14,6 +14,50 @@ involves some [[id:f43fa203-367c-44a9-9762-e623f4ae41d1][system administration]]
 
 inspired by [[https://config.daviwil.com/systems][System Configuration with Guix - config.daviwil.com]]
 
+[[/home/samuel/dotfiles/.doom.d/config.org::*=get-headline-path= headline parsing function][=get-headline-path= headline parsing function]]
+
+[[~/dotfiles/.doom.d/config.org::*globals]]
+
+#+begin_src emacs-lisp
+(let* ((concepts '(test debug operating-system define))
+      (res (qz/headline-concepts concepts)))
+  (cl-loop for concept in concepts
+           do (cl-destructuring-bind (c h l) (assoc concept res)
+                (insert "**** ")
+                (insert h)
+                (insert "\n"))))
+#+end_src
+
+
+* housekeeping
+
+** =$HOME/git=
+keep it as =category/{repo, repo, repo}= for sanity
+#+begin_src shell :results drawer :tangle no
+cd $HOME/git
+tree -L 2
+#+end_src
+
+#+RESULTS:
+:results:
+.
+├── build
+│   ├── k9s
+│   └── xprintidle
+├── ns
+│   ├── agenting_tools
+│   ├── aws-okta-config
+│   ├── ns.sh
+│   ├── om
+│   └── routing
+├── qzdl
+│   └── libre-ary
+└── sys
+    └── guix
+
+12 directories, 1 file
+:end:
+
 * configuration
 ** testing
 *** helpers
@@ -165,6 +209,7 @@ tree $HOME/dotfiles/.config/guix
 └── qzdl
     ├── cosas.scm
     ├── device
+    │   ├── cleanpi.scm
     │   ├── donutrust.scm
     │   └── xps.scm
     ├── jobs.scm
@@ -172,7 +217,6 @@ tree $HOME/dotfiles/.config/guix
     │   ├── go-mvdan-sh.scm
     │   ├── manifest.scm
     │   └── python-3.6.4.scm
-    ├── qzdl.scm
     ├── rules.scm
     ├── services.scm
     └── system
@@ -192,6 +236,7 @@ tree $HOME/dotfiles/.config/guix
 | .config/dunst/notify-emacs.sh              |
 | .config/guix/channels.scm                  |
 | .config/guix/qzdl/cosas.scm                |
+| .config/guix/qzdl/device/cleanpi.scm       |
 | .config/guix/qzdl/device/donutrust.scm     |
 | .config/guix/qzdl/device/xps.scm           |
 | .config/guix/qzdl/jobs.scm                 |
@@ -200,6 +245,7 @@ tree $HOME/dotfiles/.config/guix
 | .config/guix/qzdl/package/python-3.6.4.scm |
 | .config/guix/qzdl/rules.scm                |
 | .config/guix/qzdl/services.scm             |
+| .config/guix/qzdl/system/base.scm          |
 | .config/guix/qzdl/system/install.scm       |
 | .config/guix/qzdl/system/minimal.scm       |
 | .config/shell/aliases                      |
@@ -219,6 +265,8 @@ tree $HOME/dotfiles/.config/guix
 | .local/bin/test-system.sh                  |
 | .local/bin/unix                            |
 | .local/bin/update-dotfiles.sh              |
+**** an index of nested =debugs=
+
 
 ** =(qzdl cosas)=
 :PROPERTIES:
@@ -262,11 +310,8 @@ test-load-file .config/guix/qzdl/rules.scm
 #+end_src
 ***** verify
 #+begin_src scheme :tangle no
-
 (use-modules (qzdl services))
 (use-modules (ice-9 pretty-print))
-
-(pretty-print %my-desktop-services)
 #+end_src
 
 #+RESULTS:
@@ -340,13 +385,26 @@ sudo lspci -k | grep -EA3 'VGA|3D|Display'
 #+end_example
 ** =(qzdl jobs)=
 :: .config/guix/qzdl/jobs.scm
+:: [[https://www.gnu.org/software/mcron/design.html][Mcron User Requirements]]
+:: [[https://www.gnu.org/software/mcron/design.html][Mcron User Requirements]]
 
+https://www.gnu.org/software/mcron/manual/html_node/Introduction.html#Introduction
+
+*** test
+#+begin_src shell .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/jobs.scm
+#+end_src
+
+*** define
 #+begin_src scheme :tangle .config/guix/qzdl/jobs.scm
 (define-module (qzdl jobs)
   #:use-module (gnu)
   #:use-module (guix)
-  #:use-module (gnu services mcron))
-
+  #:use-module (gnu services mcron)
+  #:export (updatedb-job))
+#+end_src
+*** updatedb
+#+begin_src scheme :tangle .config/guix/qzdl/jobs.scm
 (define updatedb-job
   ;; Run 'updatedb' at 3AM every day.  Here we write the
   ;; job's action as a Scheme procedure.
@@ -356,6 +414,15 @@ sudo lspci -k | grep -EA3 'VGA|3D|Display'
                   "updatedb"
                   "--prunepaths=/tmp /var/tmp /gnu/store"))))
 #+end_src
+
+*** life auto-commit
+#+begin_src scheme :tangle .config/guix/qzdl/jobs.scm
+(define autocommit-job
+  #~(job )
+    )
+#+end_src
+*** guix pull at night
+
 ** =(qzdl services)=
 :PROPERTIES:
 :header-args: :tangle .config/guix/qzdl/services.scm
@@ -364,57 +431,61 @@ sudo lspci -k | grep -EA3 'VGA|3D|Display'
 
 file:./doc/services.scm.png
 
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
+#+end_src
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define-module (qzdl services)
   #:use-module (qzdl cosas)
   #:use-module (qzdl rules)
-  #:use-module (srfi srfi-1)            ;; provides remove
+  #:use-module (srfi srfi-1)            ;; provides remove, member
+  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
+  #:use-module (gnu packages suckless)  ;; for slock
   #:use-module (gnu services)
   #:use-module (gnu services base)
-  #:use-module (gnu services desktop)   ;; for udev
-  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
+  #:use-module (gnu services desktop)   ;; for udev, x11 socket
   #:use-module (gnu services databases) ;; for postgres
+  #:use-module (gnu services dbus)
   #:use-module (gnu services desktop)   ;; FIXME %desktop-services is blote
   #:use-module (gnu services docker)
   #:use-module (gnu services networking)
+  #:use-module (gnu services sound)
+  #:use-module (gnu services ssh)
   #:use-module (gnu services virtualization)
-  #:use-module (gnu packages gnome)     ;; for network-manager-openvpn
+  #:use-module (gnu services xorg)      ;; FIXME to remove gdm-service-type
   #:export (my-libvirt-service
             my-docker-service
+            my-dbus-service
             my-bluetooth-service
-            ;;my-xorg-service
-            ;;my-network-manager-service
-            ;;my-ssh-service
+
+            my-wpa-supplicant-service
+            my-network-manager-service
+            my-ssh-service
+
             my-postgresql-service
             my-postgresql-role-service
-            my-login-service
+
+            my-xorg-service
+            my-x11-socket-directory-service
+
+            my-dbus-service
+            my-ntp-service
+            my-elogind-service
+
             %my-desktop-services))
 #+end_src
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
-#+end_src
 
-**** TODO xorg-service
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
- ;; X11
-              ;; (service slim-service-type
-              ;;    (slim-configuration
-              ;;     (xorg-configuration
-              ;;      (xorg-configuration
-              ;;       (keyboard-layout
-              ;;        (operating-system-keyboard-layout base-operating-system)
-              ;;        (extra-config (list %xorg-libinput-config)))))))
-#+end_src
-**** TODO bluetooth-service
+**** services
+***** TODO bluetooth-service
 users must be in the =lp= group
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define my-bluetooth-service
   (bluetooth-service #:auto-enable? #t))
 #+end_src
 
-**** TODO postgresql-service
+***** TODO postgresql-service
 :: https://guix.gnu.org/manual/en/html_node/Database-Services.html
 
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
@@ -432,14 +503,29 @@ users must be in the =lp= group
 (define my-postgresql-service
   (service postgresql-service-type))
 #+end_src
-**** TODO network-manager-service w/ openvpn
+***** TODO network-manager-service w/ openvpn
+:: (gnu services networking)
 :: [[https://guix.gnu.org/manual/en/html_node/Networking-Services.html][Networking Services (GNU Guix Reference Manual)]]
-**** TODO sshd service
-#+begin_src scheme :tangle .config/guix/qzdl/services.scm
 
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-network-manager-service
+  (service network-manager-service-type
+   (network-manager-configuration
+    (vpn-plugins (list network-manager-openvpn)))))
 #+end_src
-**** TODO homelab services
-**** TODO virtualisation; libvert
+***** TODO wpa-supplicant
+#+begin_src scheme
+(define my-wpa-supplicant-service
+  (service wpa-supplicant-service-type))
+#+end_src
+
+***** TODO sshd service
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-ssh-service
+  (service openssh-service-type))
+#+end_src
+
+***** virtualisation; libvirt
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define my-libvirt-service
   (service libvirt-service-type
@@ -447,9 +533,19 @@ users must be in the =lp= group
             (unix-sock-group "libvirt")
             (tls-port "16555"))))
 #+end_src
-**** TODO login manager
+***** TODO (slim)login & xorg
+:: [[https://guix.gnu.org/manual/en/html_node/X-Window.html][X Window (GNU Guix Reference Manual)]]
+:: /run/current-system/profile/share
+:: /run/current-system/profile/share/xsessions
+
+in [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], the xorg service is coupled to a login manager, such as GDM, or
+SLiM.
+
+a window manager must be specified in the system-packages
+
+
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-login-service
+(define my-xorg-service
   (service slim-service-type
            (slim-configuration
             (xorg-configuration
@@ -460,43 +556,91 @@ users must be in the =lp= group
 #+end_src
 
 #+RESULTS:
+***** TODO screen locker
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-screen-locker-service
+  (screen-locker-service slock))
+#+end_src
 
-**** docker
+***** elogind
+:: (gnu services desktop)
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-elogind-service
+  (service elogind-service-type
+           (elogind-configuration
+            (handle-lid-switch-external-power 'suspend))))
+#+end_src
+
+***** dbus
+:: gnu/services/dbus
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-dbus-service
+    (dbus-service))
+#+end_src
+
+***** udev
+:: (gnu services base)
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-udev-service-type
+  (service udev-service-type
+           (udev-configuration
+            (rules %udev-rule-backlight))))
+#+end_src
+
+***** ntp; network time
+:: (gnu services networking)
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-ntp-service
+  (service ntp-service-type))
+#+end_src
+
+***** x11 socket
+:: [[https://www.ibm.com/docs/en/ztpf/2020?topic=considerations-unix-domain-sockets][UNIX domain sockets - IBM]]
+:: [[https://en.wikipedia.org/wiki/Unix_domain_socket][Unix domain socket - Wikipedia]]
+:: https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html
+
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-x11-socket-directory-service
+  x11-socket-directory-service)
+#+end_src
+
+***** pulse/alsa
+#+begin_src scheme :tangle .config/guix/qzdl/services.scm
+(define my-pulseaudio-service
+ (service pulseaudio-service-type))
+
+(define my-alsa-service
+  (service alsa-service-type))
+#+end_src
+
+***** docker
 requires user & group
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define my-docker-service
   (service docker-service-type))
 #+end_src
-**** TODO desktop
-should prolly split this out
 
+**** composition
+***** TODO homelab services
+grafana, prometheus, ...
+***** TODO development services
+***** TODO desktop services
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
-;; (define %my-desktop-services
-;;   (list (service slim-service-type
-;;                  (elogind-configuration
-;;                   (handle-lid-switch-external-power 'suspend)))
-;;         (service slim-service-type
-;;                  (udev-configuration
-;;                   (rules (list %udev-rule-backlight))))
-;;         (service slim-service-type
-;;                  (network-manager-configuration
-;;                   (vpn-plugins (list network-manager-openvpn))))))
-
 (define %my-desktop-services
-  (remove
-   (lambda (s) (eq? (service-kind s) gdm-service-type))
-  (modify-services %desktop-services
-                   (elogind-service-type config =>
-                                         (elogind-configuration (inherit config)
-                                                                (handle-lid-switch-external-power 'suspend)))
-                   (udev-service-type config =>
-                                      (udev-configuration (inherit config)
-                                                          (rules (cons %udev-rule-backlight
-                                                                       (udev-configuration-rules config)))))
-                   (network-manager-service-type config =>
-                                                 (network-manager-configuration (inherit config)
-                                                                                (vpn-plugins (list network-manager-openvpn)))))))
+  (list my-xorg-service
+        my-x11-socket-directory-service
+        my-pulseaudio-service
+        my-alsa-service
+        my-screen-locker-service
+        my-network-manager-service
+        my-wpa-supplicant-service
+        my-elogind-service))
 #+end_src
+
 
 ** =(qzdl package)=
 :: .config/guix/qzdl/package
@@ -1170,7 +1314,7 @@ created using modules, as described:
   - how does a manifest relate to [ module(gnu package emacs)-> packages(emacs-no-x-toolkite) || manifest emacs-no-x-toolkit@28.1 ] ?
 *** debugging
 **** excpecting struct in whatever
-#+begin_src scheme
+#+begin_src scheme :tangle no
 ,use (gnu system)
 ,use (qzdl system minimal)
 ,use (ice-9 pprint)
@@ -1181,7 +1325,7 @@ created using modules, as described:
 
 #+RESULTS:
 
-*** (qzdl system base)= :file:
+*** =(qzdl system base)= :file:
 :PROPERTIES:
 :ID:       61f53bfc-e34f-42ac-9dea-6f5e57f9a056
 :header-args: :tangle .config/guix/qzdl/system/base.scm
@@ -1193,6 +1337,7 @@ created using modules, as described:
 #+begin_src scheme :tangle .config/guix/qzdl/system/base.scm
 (define-module (qzdl system base)
   #:use-module (qzdl cosas)
+  #:use-module (qzdl services)
   #:use-module (gnu)
   #:use-module (srfi srfi-1) ; scheme extensions per https://srfi.schemers.org/srfi-159/srfi-159.html
   #:use-module (gnu system nss) ;; network security service; appdev ssl,tls, etc
@@ -1207,8 +1352,6 @@ created using modules, as described:
   #:use-module (nongnu system linux-initrd)
   #:export (base-operating-system))
 #+end_src
-
-#+RESULTS:
 
 ***** test
 #+begin_src shell :tangle .local/bin/test-system.sh
@@ -1253,7 +1396,7 @@ and intel ucode images to the bootloader config in initrd.
    (timezone "Europe/Berlin")
    (locale "en_US.UTF-8")
 
-   ;; nonfree kernel
+   ;; nonfree kernel :(
    (kernel linux)
    (firmware (list linux-firmware))
    (initrd microcode-initrd)
@@ -1265,27 +1408,32 @@ and intel ucode images to the bootloader config in initrd.
    (keyboard-layout my-keyboard-layout)
 
    ;; UEFI+GRUB
-   (bootloader (bootloader-configuration
-                (bootloader grub-efi-bootloader)
-                (target "/boot/efi")
-                (keyboard-layout keyboard-layout)))
+   (bootloader
+    (bootloader-configuration
+     (bootloader grub-efi-bootloader)
+     (target "/boot/efi")
+     (keyboard-layout keyboard-layout)))
 
-   ;; base user
-   (users (cons (user-account
-                 (name "samuel")
-                 (comment "it me")
-                 (group "users")
-                 (home-directory "/home/samuel/")
-                 (supplementary-groups '("wheel"     ;; sudo
-                                         "netdev"    ;; network devices
-                                         "kvm"       ;; virtualisation
-                                         "tty"
-                                         "input"
-                                         "lp"        ;; control bluetooth devices
-                                         "audio"     ;; control audio devices
-                                         "video"     ;; control video devices
-                                         "docker")))
-                %base-user-accounts))
+   (users
+    (cons (user-account
+           (name "samuel")
+           (comment "it me")
+           (group "users")
+           (home-directory "/home/samuel/")
+           (supplementary-groups '("wheel"     ;; sudo
+                                   "netdev"    ;; network devices
+                                   "kvm"       ;; virtualisation
+                                   "tty"
+                                   "input"
+                                   "lp"        ;; control bluetooth devices
+                                   "audio"     ;; control audio devices
+                                   "video"     ;; control video devices
+                                   "docker")))
+          %base-user-accounts))
+
+   (groups
+    (cons (user-group (name "docker"))
+          %base-groups))
 
    ;; OVERWRITE THIS WHEN INHERITING
    ;;   AN ARTIFACT OF INCIDENTAL COMPLEXITY IN GUIX
@@ -1297,29 +1445,22 @@ and intel ucode images to the bootloader config in initrd.
                    (check? #f))
                   %base-file-systems))
 
-   (packages (append (list
-                      git
-                      stow
-                      emacs
-                      vim
-                      ;;openvpn
-                      nss-certs
-                      ;; fs utils
-                      ;;gvfs
-                      ;;fuse-exfat
-                      ;;exfat-utils
-                      )
-                     %base-packages))
+   (services
+    (cons* my-docker-service
+           (extra-special-file
+            "/usr/bin/env"
+            (file-append coreutils "/bin/env"))
+           %base-services))
 
-   ;; Use the "desktop" services, which include the X11 log-in service,
-   ;; networking with NetworkManager, and more
-   (services (append (list (service docker-service-type)
-                           (extra-special-file "/usr/bin/env"
-                                               (file-append coreutils "/bin/env"))
-                           ;(service thermald-service-type)
-                           )
-                     %base-services)))) ;; TODO INSPECT %base-services
+   (packages
+    (cons* git
+           stow
+           emacs
+           vim
+           nss-certs
+           %base-packages))))
 #+end_src
+****** TODO inspect =%base-*= stuff and chuck out
 
 *** =(qzdl system tiny)=  :file:
 :PROPERTIES:
@@ -1336,6 +1477,7 @@ consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 :ROAM_ALIASES: "guix minimal system"
 :END:
 :: .config/guix/qzdl/system/minimal.scm
+
 things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 
 ***** test
@@ -1359,6 +1501,7 @@ test-load-file .config/guix/qzdl/system/minimal.scm
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
   #:use-module (gnu packages audio)          ;;
   #:use-module (gnu packages emacs)          ;;
+  #:use-module (gnu packages emacs-xyz)
   #:use-module (gnu packages pulseaudio)     ;; audio daemon
   #:use-module (gnu packages wm)             ;; lots of wm options (blote)
   #:use-module (gnu packages cups)           ;; printing
@@ -1367,11 +1510,20 @@ test-load-file .config/guix/qzdl/system/minimal.scm
   #:use-module (gnu packages web-browsers)   ;; web browsers (blote)
   #:use-module (gnu packages linux)          ;; for bluez
   #:use-module (gnu packages xorg)           ;; xf86-input-libinput
-  #:export (minimal-operating-system))
+  #:export (%minimal-services
+            minimal-operating-system))
 #+end_src
-***** services
+***** minimal-services
 #+begin_src scheme :tangle .config/guix/qzdl/system/minimal.scm
 (use-service-modules desktop xorg)
+
+(define %minimal-services
+  (append
+   (list my-libvirt-service
+         my-bluetooth-service
+         my-postgresql-service
+         my-postgresql-role-service)
+   %my-desktop-services))
 #+end_src
 ***** operating-system
 - [[https://guix.gnu.org/en/manual/en/html_node/Desktop-Services.html#index-_0025desktop_002dservices][Desktop Services (GNU Guix Reference Manual)]]
@@ -1381,23 +1533,33 @@ test-load-file .config/guix/qzdl/system/minimal.scm
    (inherit base-operating-system)
 
    (services
-    (append
-     %my-desktop-services
-     (cons* my-libvirt-service
-            my-bluetooth-service
-            my-docker-service
-            my-login-service
-            (operating-system-services base-operating-system))))
+    (append %minimal-services
+            (operating-system-user-services base-operating-system)))
 
+   ;; suggested operating-system-user-services
+   ;; https://issues.guix.gnu.org/37083
    (packages
     (cons* pulseaudio
            bluez
            bluez-alsa
            tlp                  ;; laptop power management
            xf86-input-libinput
-           emacs
+
+           xmonad emacs emacs-exwm emacs-desktop-environment
+
            (operating-system-packages base-operating-system)))))
 #+end_src
+
+***** debug
+****** systems
+#+begin_src scheme :tangle no
+;;.config/guix/qzdl/system/minimal.scm
+(use-modules (ice-9 pretty-print))
+(pretty-print
+  (map (lambda (s) (service-kind s))
+       (operating-system-services minimal-operating-system)))
+#+end_src
+
 *** =(qzdl system install)= :file:
 :: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
 :: .config/guix/qzdl/system/install.scm
@@ -1450,10 +1612,31 @@ installation-os-nonfree
 
 ** =(qzdl devices)=
 *** =(qzdl devices xps)= :@home:
+:: .config/guix/qzdl/device/xps.scm
+
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/device/xps.scm
+#+end_src
+
+**** define
 #+begin_src scheme :tangle .config/guix/qzdl/device/xps.scm
 (define-module (qzdl device xps))
+#+end_src
+
+*** =(qzdl devices cleanpi)= :@home:
+:: .config/guix/qzdl/device/cleanpi.scm
+
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/device/cleanpi.scm
+#+end_src
+
+**** define
+#+begin_src scheme :tangle .config/guix/qzdl/device/cleanpi.scm
+(define-module (qzdl device cleanpi))
 #+end_src
 
 *** =(qzdl devices donutrust)= :@work:
@@ -1464,6 +1647,10 @@ consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
 my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/device/donutrust.scm
+#+end_src
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
 (define-module (qzdl device donutrust)
@@ -1472,26 +1659,46 @@ my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa8
   #:use-module (gnu services databases)
   #:use-module (nongnu packages linux)
   #:use-module (qzdl system minimal)
-  #:export (donutrust-operating-system))
+  #:use-module (qzdl services)
+  #:export (%donutrust-services
+            donutrust-operating-system))
 #+end_src
 
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file .config/guix/qzdl/device/donutrust.scm
+**** services
+***** postgres-role-service
+extend =my-postgresql-role-service= with another role
+
+#+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
+(define pg-role-service
+  (simple-service
+   'adhoc-extension postgresql-role-service-type
+   (list (postgresql-role
+          (name "newstore")
+          (create-database? #t)))))
 #+end_src
+
+***** donutrust-services
+#+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
+(define %donutrust-services
+  (list pg-role-service))
+#+end_src
+
 
 **** operating system
 #+begin_src scheme :tangle .config/guix/qzdl/device/donutrust.scm
 (define donutrust-operating-system
   (operating-system
     (inherit minimal-operating-system)
+
     (host-name "donutrust")
 
-    (firmware (list linux-firmware sof-firmware))
+    (firmware
+     (list linux-firmware sof-firmware))
 
     (services
-     (delete-duplicates
-      (operating-system-services minimal-operating-system)))
+      (append %donutrust-services
+              %minimal-services
+              %base-services))
 
     (mapped-devices
      (list (mapped-device
@@ -1499,39 +1706,215 @@ test-load-file .config/guix/qzdl/device/donutrust.scm
             (target "sys-root")
             (type luks-device-mapping))))
 
-
     (file-systems
-     (cons*
-      (file-system
-        (device (file-system-label "sys-root"))
-        (mount-point "/")
-        (type "ext4")
-        (dependencies mapped-devices))
-      (file-system
-        (device "/dev/nvme0n1p1")
-        (mount-point "/boot/efi")
-        (type "vfat"))
-      %base-file-systems))
-
-    ;; (services
-    ;;  (cons*
-       ;; (simple-service 'postgres-roles
-       ;;                 postgresql-role-service-type
-       ;;                 (list (const (postgresql-role
-       ;;                               (name "newstore")
-       ;;                               (create-database? #t)))))
-       ;; (operating-system-services minimal-operating-system)))
-
-  ))
+     (cons* (file-system
+              (device (file-system-label "sys-root"))
+              (mount-point "/")
+              (type "ext4")
+              (dependencies mapped-devices))
+            (file-system
+              (device "/dev/nvme0n1p1")
+              (mount-point "/boot/efi")
+              (type "vfat"))
+            %base-file-systems))))
 
 donutrust-operating-system
 #+end_src
 
-*** =(qzdl devices cleanpi)= :@home:
+***** problems abounding with understanding serviceextension
+struggling to grok =extension= for =postgresql-role-service= to add a role -> does
+anything obvious jump out at you here?
 
+
+#+begin_src scheme :tangle no
+sudo -E reconfigure op.scm
+
+previous broken version
+....
+    (services
+     (cons* (service postgresql-service-type)      ;; where these actually come from
+            (service postgresql-role-service-type) ;; the inherited OS
+            (simple-service 'adhoc-extension postgresql-role-service-type
+                            (list (service-extension
+                                   postgresql-role-service-type
+                                   (const (postgresql-role
+                                           (name "alice")
+                                           (create-database? #t))))))
+            %desktop-services))
+....
+
+
+previous broken error
+....
+Backtrace:
+In srfi/srfi-1.scm:
+   586:29 19 (map1 (#<<service> type: #<service-type agetty 7f5ce…> …))
+   586:29 18 (map1 (#<<service> type: #<service-type console-font…> …))
+   586:29 17 (map1 (#<<service> type: #<service-type virtual-term…> …))
+   586:29 16 (map1 (#<<service> type: #<service-type ntp 7f5ced4a…> …))
+   586:29 15 (map1 (#<<service> type: #<service-type dbus 7f5ced9…> …))
+   586:29 14 (map1 (#<<service> type: #<service-type elogind 7f5c…> …))
+   586:29 13 (map1 (#<<service> type: #<service-type upower 7f5ce…> …))
+   586:29 12 (map1 (#<<service> type: #<service-type avahi 7f5cee…> …))
+   586:29 11 (map1 (#<<service> type: #<service-type wpa-supplica…> …))
+   586:29 10 (map1 (#<<service> type: #<service-type network-mana…> …))
+   586:17  9 (map1 (#<<service> type: #<service-type postgresql-r…> …))
+In gnu/services/databases.scm:
+   420:30  8 (postgresql-role-shepherd-service #<<postgresql-role-co…>)
+   387:11  7 (postgresql-create-roles _)
+In srfi/srfi-1.scm:
+   673:15  6 (append-map #<procedure 7f5ceae91180 at gnu/services/d…> …)
+   586:29  5 (map1 (#<<postgresql-role> name: "postgres" permissi…> …))
+   586:29  4 (map1 (#<<postgresql-role> name: "samuel" permission…> …))
+   586:17  3 (map1 (#<<service-extension> target: #<service-type po…>))
+In gnu/services/databases.scm:
+   389:14  2 (_ #<<service-extension> target: #<service-type postgre…>)
+In ice-9/boot-9.scm:
+  1685:16  1 (raise-exception _ #:continuable? _)
+  1685:16  0 (raise-exception _ #:continuable? _)
+
+ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+Throw to key `wrong-type-arg' with args `(#<<service-extension> target: #<service-type postgresql-role 7f5cee470d40> compute: #<procedure 7f5cf9e56640 at ice-9/boot-9.scm:809:2 _>>)'.
+....
+
+
+working version
+....
+  (services
+     (cons* (service postgresql-service-type)        ;; where these would actually
+            (service postgresql-role-service-type)   ;; come from the inherited OS
+            (simple-service 'adhoc-extension postgresql-role-service-type
+                            (list (postgresql-role   ;; implicitly making an extension,
+                                   (name "alice")    ;; so just specify the values required
+                                   (create-database? #t))))
+            %my-desktop-services))
+....
+
+
+
+
+#+end_src
+
+#+RESULTS:
+: #<unspecified>
+
+
+I'm setting up an =operating-system=, which inherits from another with a service
+of type =postgresql-role-service-type=, but I cannot grok the =service-extension=
+nor =simple-service= extension pattern for this service, to basically just =cons= a
+new =role= to the existing config.
+
+specifically, failure when =build= or =reconfigure=
+- [Y] postgresql-service-type
+- [Y] postgresql-role-service-type
+-
+
+
+#+begin_example
+...
+(services
+   ())
+;; => In procedure service-kind: Wrong type argument: #<<service-extension> target: #<service-type postgresql-role
+#+end_example
+
+***** debugging
+
+****** asking the question "how can i access properties of record 'config'?" :test:
+#+begin_src scheme :tangle no :results value :scheme guile
+(use-modules (guix)
+             (gnu)
+             (gnu services)
+             (gnu services databases)
+             (qzdl services)
+             (ice-9 pretty-print))
+
+(simple-service
+ 'adhoc-extension postgresql-role-service-type
+ (list (service-extension
+        postgresql-role-service-type
+        (const (postgresql-role
+                (name "alice")
+                (create-database? #t)))))
+
+(record? (service-kind my-postgresql-role-service))             ;; #t
+(record? my-postgresql-role-service)                            ;; #t
+(record-type? my-postgresql-service)                            ;; #f
+(record-type? (service-kind my-postgresql-service))             ;; #f
+(record-type-descriptor my-postgresql-role-service)             ;; #<record-type <service>>
+(record-type-descriptor (service-kind my-postgresql-service))   ;; #<record-type <service-type>>
+
+(pretty-print
+ (map (lambda (r)
+        (let ((rt (record-type-descriptor r)))
+          `(:record ,r
+            :record-type-descriptor ,rt
+            :record-type-uid         ,(record-type-uid         rt)
+            :record-type-constructor ,(record-type-constructor rt)
+            :record-type-parents     ,(record-type-parents     rt)
+            :record-type-properties  ,(record-type-properties  rt)
+            :record-type-name        ,(record-type-name        rt)
+            :record-type-parent      ,(record-type-parent      rt)
+            :record-type-fields      ,(record-type-fields      rt)
+            :record-type-extensible? ,(record-type-extensible? rt)
+            :record-predicate        ,(record-predicate        rt)
+            :record-type-opaque?     ,(record-type-opaque?     rt))))
+      `(,my-postgresql-role-service
+        ,(service-kind my-postgresql-service))))
+
+;;; checking
+;;(record-type-vtable )
+;;record-type-descriptor (obj)
+;;record?	#<procedure record? (obj)>
+;;record-type?	#<procedure record-type? (obj)>
+
+;;; requiring additional props
+;;record-modifier	#<procedure record-modifier (rtd field-name-or-idx)>
+;;record-accessor (field-name-or-index)
+;;record-type-has-parent? (parent)
+
+;;; unsure
+;;record-constructor	#<procedure record-constructor (rtd) | (rtd field-names)>
+;;record-type-mutable-fields	#<procedure record-type-mutable-fields (rtd)>
+#+end_src
+
+****** interrogate services
+#+begin_src scheme :tangle no
+;; .config/guix/qzdl/device/donutrust.scm
+(use-modules (ice-9 pretty-print))
+(pretty-print
+  (map (lambda (s) (service-kind s))
+       (operating-system-services donutrust-operating-system)))
+
+(pretty-print (length (operating-system-services donutrust-operating-system)))
+(pretty-print (length (delete-duplicates (operating-system-services donutrust-operating-system))))
+#+end_src
 ** shell
 :: .config/shell
 
+*** test :test:
+#+begin_src shell :tangle .local/bin/test-system.sh
+headline "TESTING SHELL CONFIGS"
+delim
+
+block "BEGIN: linting"
+echo "...TODO lint shell files @shfmt"
+block "END: linting"
+delim
+
+block "BEGIN: sourcing"
+tmpbase="$HOME/.config/shell"
+for f in $(find "$tmpbase/") ; do
+    [ -d $f ] && continue;
+    echo "...sourcing $f"
+
+    if $(source "$f"); then
+        qz-color $qz_greener ".....PASSED: $f"
+    else qz-color $qz_red ".....FAILED: $f"
+    fi;
+done;
+
+block "END: sourcing"
+#+end_src
 *** aliases
 #+begin_src shell :tangle .config/shell/aliases
 #!/bin/bash
@@ -1661,8 +2044,15 @@ export EMACS_DIR="$HOME/.doom.d"
 export webdownloadsdir="$HOME/Downloads/recoll"
 
 export EDITOR='emacsclient -c -a emacs'
+# TODO does this work?
 export TERMINAL='emacsclient -c -e "(vterm)" -a emacs -e "(vterm)"'
 export BROWSER='firefox'
+export FILE=$EDITOR
+
+# display scaling for hidpi
+export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
+export GDK_SCALE=2
+export GDK_DPI_SCALE=0.5
 
 # fix ~/ carnage
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -1672,7 +2062,7 @@ export GIO_EXTRA_MODULES="$HOME/.guix-profile/lib/gio/modules${GIO_EXTRA_MODULES
 export WGETRC="${XDG_CONFIG_HOME:-$HOME/.config}/wget/wgetrc"
 export INPUTRC="${XDG_CONFIG_HOME:-$HOME/.config}/shell/inputrc"
 
-export SUDO_ASKPASS='dmenu'
+export SUDO_ASKPASS='dmenupass'
 
 export GUIX_EXTRA_PROFILES="$HOME/.guix-extra-profiles"
 export GUIX_PROFILE="$HOME/.guix-profile"
@@ -1907,30 +2297,6 @@ done;
 
 #+RESULTS:
 
-*** testing :test:
-#+begin_src shell :tangle .local/bin/test-system.sh
-headline "TESTING SHELL CONFIGS"
-delim
-
-block "BEGIN: linting"
-echo "...TODO lint shell files @shfmt"
-block "END: linting"
-delim
-
-block "BEGIN: sourcing"
-tmpbase="$HOME/.config/shell"
-for f in $(find "$tmpbase/") ; do
-    [ -d $f ] && continue;
-    echo "...sourcing $f"
-
-    if $(source "$f"); then
-        qz-color $qz_greener ".....PASSED: $f"
-    else qz-color $qz_red ".....FAILED: $f"
-    fi;
-done;
-
-block "END: sourcing"
-#+end_src
 ** scripts
 *** TODO screenshot
 #+begin_src shell :tangle .local/bin/maimpick
@@ -2108,18 +2474,6 @@ exec dbus-launch --exit-with-session emacs -mm --debug-init --use-exwm
 #+end_src
 
 * merge conflict prolly
-** .profile
-#+begin_src bash :tangle no
-# Adds `~/.scripts` and all subdirectories to $PATH
-export PATH="$PATH:$(du "$HOME/.scripts/" | cut -f2 | tr '\n' ':' | sed 's/:*$//'):~/.local/bin"
-export EDITOR="emacsclient -c -a emacs" # opens GUI
-export TERMINAL="emacsclient -c -e '(vterm)'"
-export BROWSER="firefox"
-export FILE="emacsclient -t -a emacs"
-export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
-export GDK_SCALE=2
-export GDK_DPI_SCALE=0.5
-#+end_src
 
 ** TODO emacs config as-a-package
 basically, to be able to update my emacs config with ~guix pull~
@@ -2135,7 +2489,7 @@ docker run -it -v /tmp:/tmp -v $HOME/git ufoym/deepo python3
            :files (:defaults "assets"  "renv" "*.R" "*.gnuplot")))
 #+end_src
 
-**** guix
+**** guix :packages:
 #+begin_src scheme
 r
 gnuplot

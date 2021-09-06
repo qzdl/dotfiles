@@ -13,8 +13,16 @@ export EMACS_DIR="$HOME/.doom.d"
 export webdownloadsdir="$HOME/Downloads/recoll"
 
 export EDITOR='emacsclient -c -a emacs'
+# TODO does this work?
 export TERMINAL='emacsclient -c -e "(vterm)" -a emacs -e "(vterm)"'
 export BROWSER='firefox'
+export FILE=$EDITOR
+
+# display scaling for hidpi
+export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
+export GTK3_RC_FILES="$HOME/.config/gtk-3.0/gtkrc-3.0"
+export GDK_SCALE=1 #2
+export GDK_DPI_SCALE=1 #0.5
 
 # fix ~/ carnage
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -24,7 +32,7 @@ export GIO_EXTRA_MODULES="$HOME/.guix-profile/lib/gio/modules${GIO_EXTRA_MODULES
 export WGETRC="${XDG_CONFIG_HOME:-$HOME/.config}/wget/wgetrc"
 export INPUTRC="${XDG_CONFIG_HOME:-$HOME/.config}/shell/inputrc"
 
-export SUDO_ASKPASS='dmenu'
+export SUDO_ASKPASS='dmenupass'
 
 export GUIX_EXTRA_PROFILES="$HOME/.guix-extra-profiles"
 export GUIX_PROFILE="$HOME/.guix-profile"

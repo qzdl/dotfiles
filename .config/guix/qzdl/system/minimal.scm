@@ -13,6 +13,7 @@
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
   #:use-module (gnu packages audio)          ;;
   #:use-module (gnu packages emacs)          ;;
+  #:use-module (gnu packages emacs-xyz)
   #:use-module (gnu packages pulseaudio)     ;; audio daemon
   #:use-module (gnu packages wm)             ;; lots of wm options (blote)
   #:use-module (gnu packages cups)           ;; printing
@@ -21,28 +22,36 @@
   #:use-module (gnu packages web-browsers)   ;; web browsers (blote)
   #:use-module (gnu packages linux)          ;; for bluez
   #:use-module (gnu packages xorg)           ;; xf86-input-libinput
-  #:export (minimal-operating-system))
+  #:export (%minimal-services
+            minimal-operating-system))
 
 (use-service-modules desktop xorg)
+
+(define %minimal-services
+  (append
+   (list my-libvirt-service
+         my-bluetooth-service
+         my-postgresql-service
+         my-postgresql-role-service)
+   %my-desktop-services))
 
 (define minimal-operating-system
   (operating-system
    (inherit base-operating-system)
 
    (services
-    (append
-     %my-desktop-services
-     (cons* my-libvirt-service
-            my-bluetooth-service
-            my-docker-service
-            my-login-service
-            (operating-system-services base-operating-system))))
+    (append %minimal-services
+            (operating-system-user-services base-operating-system)))
 
+   ;; suggested operating-system-user-services
+   ;; https://issues.guix.gnu.org/37083
    (packages
     (cons* pulseaudio
            bluez
            bluez-alsa
            tlp                  ;; laptop power management
            xf86-input-libinput
-           emacs
+
+           xmonad emacs emacs-exwm emacs-desktop-environment
+
            (operating-system-packages base-operating-system)))))
