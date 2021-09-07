@@ -67,3 +67,5 @@ miniconda3/
 *virtualenv/
 *.log
 *keypairs*
+*private/
+*authinfo

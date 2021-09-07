@@ -31,6 +31,7 @@
             my-xorg-service
             my-x11-socket-directory-service
 
+            my-udev-service
             my-dbus-service
             my-ntp-service
             my-elogind-service
@@ -63,7 +64,9 @@
   (service wpa-supplicant-service-type))
 
 (define my-ssh-service
-  (service openssh-service-type))
+  (service openssh-service-type
+           (openssh-configuration
+            (x11-forwarding? #t))))
 
 (define my-libvirt-service
   (service libvirt-service-type
@@ -77,8 +80,9 @@
             (xorg-configuration
              (xorg-configuration
               (keyboard-layout my-keyboard-layout)
-              (extra-config (list %xorg-libinput-config
-                                  %xorg-intel-antitearing-i915)))))))
+              (extra-config
+               (list %xorg-libinput-config
+                     %xorg-intel-antitearing-i915)))))))
 
 (define my-screen-locker-service
   (screen-locker-service slock))
@@ -91,10 +95,10 @@
 (define my-dbus-service
     (dbus-service))
 
-(define my-udev-service-type
-  (service udev-service-type
-           (udev-configuration
-            (rules %udev-rule-backlight))))
+(define my-udev-service
+  (simple-service 'udev-rules udev-service-type
+                  (udev-configuration
+                   (rules %udev-rule-backlight))))
 
 (define my-ntp-service
   (service ntp-service-type))

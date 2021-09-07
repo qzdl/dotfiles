@@ -1,51 +1,52 @@
 #!/bin/bash
-qz-color() {
+qz_color() {
     echo -e "$1$2${qz_reset}"
 }
 
-qz-number-lines() {
+qz_number_lines() {
     awk '{print NR" "$0}';
 }
 
-qz-reverse() {
-    qz-number-lines | sort -k1 -n -r | sed 's/^[^ ]* //g';
+qz_reverse() {
+    qz_number_lines | sort -k1 -n -r | sed 's/^[^ ]* //g';
 }
 
 # guix reconfigure, and debug to the repl
-qz-guix-reconfigure-debug()  {
+qz_guix_reconfigure_debug()  {
     sudo -E guix repl -L "$HOME/.config/guix" $@;
 }
 
-qz-guix-reconfigure()  {
+qz_guix_reconfigure()  {
     sudo -E guix system \
         -L "$HOME/.config/guix" \
         reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
 # guix profile commands; make it easy to switch and check
-qz-guix-source-extra-profile() {
-    qz-guix-source-profile "$GUIX_EXTRA_PROFILES/$@";
+qz_guix_source_extra_profile() {
+    qz_guix_source_profile "$GUIX_EXTRA_PROFILES/$@";
 }
-qz-guix-source-profile() {
+
+qz_guix_source_profile() {
     export GUIX_PROFILE="$@"
     . "$GUIX_PROFILE/etc/profile";
 }
 
-qz-download-scihub-doi() {
+qz_download_scihub_doi() {
     curl -O \
         $(curl -s http://sci-hub.tw/"$@" \
           | grep location.href \
           | grep -o http.*pdf);
 }
 
-qz-get-functions() {
+qz_get_functions() {
   FILE="$QZ_FUNCTIONS"
   cat $FILE \
-    | grep -on '^qz-.*()' \
+    | grep -on '^qz_.*()' \
     | awk -F: '{print file":"$1,$2}' file=$FILE
 }
 
-qz-get-aliases() {
+qz_get_aliases() {
   FILE="$QZ_ALIASES"
   cat $FILE \
     | grep -on "\s.*='.*'" \

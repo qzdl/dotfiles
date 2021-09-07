@@ -22,13 +22,13 @@ alias \
 
 # easy check files
 alias \
-  aa='qz-get-aliases' \
-  af='qz-get-functions'
+  aa='qz_get_aliases' \
+  af='qz_get_functions'
 
 # my functions
 alias \
-  gR='qz-guix-reconfigure' \
-  gRd='qz-guix-reconfigure-debug' \
-  gse='qz-guix-source-extra-profile'
-  gsp='qz-guix-source-profile'
-  dlsh='qz-download-scihub-doi'
+  gR='qz_guix_reconfigure' \
+  gRd='qz_guix_reconfigure_debug' \
+  gse='qz_guix_source_extra_profile'
+  gsp='qz_guix_source_profile'
+  dlsh='qz_download_scihub_doi'

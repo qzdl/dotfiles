@@ -7,6 +7,7 @@
 #+title: system configuration
 #+filetags: :project:
 
+
 [[id:2e1b78ef-de6f-4af9-8a89-5d5ffe12a3ba][My]] system configurations for [[id:959414da-620e-473b-80fc-1918fb459c02][GNU Guix]], compiled by [[id:953e0494-76b3-4ab7-bfe6-944e178b59dd][GNU Emacs]], deployed by [[id:884406e4-0851-4dc3-a6d3-cfe1c9fa1b2b][GNU
 Stow]].
 
@@ -18,7 +19,7 @@ inspired by [[https://config.daviwil.com/systems][System Configuration with Guix
 
 [[~/dotfiles/.doom.d/config.org::*globals]]
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (let* ((concepts '(test debug operating-system define))
       (res (qz/headline-concepts concepts)))
   (cl-loop for concept in concepts
@@ -31,6 +32,390 @@ inspired by [[https://config.daviwil.com/systems][System Configuration with Guix
 
 * housekeeping
 
+#+begin_src shell :results drawer :tangle no
+echo -e "number of files: $(find . -d | wc -l)\n"
+tree -a $HOME/dotfiles -Ld 3
+#+end_src
+
+#+RESULTS:
+:results:
+number of files: 65323
+
+/home/samuel//dotfiles
+├── .config
+│   ├── bashtop
+│   ├── calibre
+│   │   ├── conversion
+│   │   ├── fonts
+│   │   └── store
+│   ├── dunst
+│   ├── fontconfig
+│   ├── getkeys
+│   ├── gtk-2.0
+│   ├── gtk-3.0
+│   ├── guile
+│   ├── guix
+│   │   ├── current -> /var/guix/profiles/per-user/samuel/current-guix
+│   │   └── qzdl
+│   ├── htop
+│   ├── lyrics
+│   ├── mpd
+│   │   └── playlists
+│   ├── mpv
+│   ├── ncmpcpp
+│   ├── neofetch
+│   ├── newsboat
+│   ├── nvim
+│   │   ├── autoload
+│   │   ├── fileconfig
+│   │   └── plugged
+│   ├── PCSX2
+│   │   ├── bios
+│   │   ├── inis_1.4.0
+│   │   └── memcards
+│   ├── qBittorrent
+│   │   └── rss
+│   ├── Recoll.org
+│   ├── shell
+│   ├── sxiv
+│   │   ├── exec
+│   │   └── sxiv
+│   ├── vlc
+│   ├── wallpapers
+│   ├── wget
+│   └── zathura
+│       └── zathura
+├── docs
+├── .doom.d
+│   ├── images
+│   ├── modules
+│   │   └── org-share
+│   ├── private
+│   ├── scripts
+│   ├── snippets
+│   │   └── kotl-mode
+│   └── themes
+├── .emacs.d
+│   ├── auto-save-list
+│   ├── bin
+│   ├── core
+│   │   ├── autoload
+│   │   ├── cli
+│   │   ├── templates
+│   │   └── test
+│   ├── docs
+│   ├── eln-cache
+│   │   ├── 28.0.50-a9f4c109
+│   │   └── 28.0.50-bb29a6db
+│   ├── .git
+│   │   ├── branches
+│   │   ├── hooks
+│   │   ├── info
+│   │   ├── logs
+│   │   ├── objects
+│   │   └── refs
+│   ├── .github
+│   │   ├── ISSUE_TEMPLATE
+│   │   └── workflows
+│   ├── .local
+│   │   ├── cache
+│   │   ├── etc
+│   │   └── straight
+│   ├── modules
+│   │   ├── app
+│   │   ├── checkers
+│   │   ├── completion
+│   │   ├── config
+│   │   ├── editor
+│   │   ├── emacs
+│   │   ├── email
+│   │   ├── input
+│   │   ├── lang
+│   │   ├── os
+│   │   ├── term
+│   │   ├── tools
+│   │   └── ui
+│   ├── test
+│   └── var
+│       └── slack-files
+├── .fonts
+│   └── static
+├── .git
+│   ├── branches
+│   ├── hooks
+│   ├── info
+│   ├── logs
+│   │   └── refs
+│   ├── objects
+│   │   ├── 00
+│   │   ├── 01
+│   │   ├── 02
+│   │   ├── 03
+│   │   ├── 04
+│   │   ├── 05
+│   │   ├── 06
+│   │   ├── 07
+│   │   ├── 08
+│   │   ├── 0a
+│   │   ├── 0b
+│   │   ├── 0c
+│   │   ├── 0d
+│   │   ├── 0e
+│   │   ├── 0f
+│   │   ├── 10
+│   │   ├── 11
+│   │   ├── 12
+│   │   ├── 13
+│   │   ├── 14
+│   │   ├── 15
+│   │   ├── 16
+│   │   ├── 17
+│   │   ├── 18
+│   │   ├── 19
+│   │   ├── 1a
+│   │   ├── 1b
+│   │   ├── 1d
+│   │   ├── 1e
+│   │   ├── 1f
+│   │   ├── 20
+│   │   ├── 21
+│   │   ├── 23
+│   │   ├── 24
+│   │   ├── 25
+│   │   ├── 26
+│   │   ├── 27
+│   │   ├── 28
+│   │   ├── 29
+│   │   ├── 2a
+│   │   ├── 2b
+│   │   ├── 2c
+│   │   ├── 2d
+│   │   ├── 2e
+│   │   ├── 2f
+│   │   ├── 30
+│   │   ├── 31
+│   │   ├── 32
+│   │   ├── 33
+│   │   ├── 34
+│   │   ├── 35
+│   │   ├── 36
+│   │   ├── 37
+│   │   ├── 38
+│   │   ├── 39
+│   │   ├── 3a
+│   │   ├── 3b
+│   │   ├── 3c
+│   │   ├── 3e
+│   │   ├── 3f
+│   │   ├── 40
+│   │   ├── 41
+│   │   ├── 42
+│   │   ├── 43
+│   │   ├── 44
+│   │   ├── 45
+│   │   ├── 46
+│   │   ├── 47
+│   │   ├── 48
+│   │   ├── 49
+│   │   ├── 4a
+│   │   ├── 4c
+│   │   ├── 4d
+│   │   ├── 4e
+│   │   ├── 4f
+│   │   ├── 50
+│   │   ├── 51
+│   │   ├── 52
+│   │   ├── 53
+│   │   ├── 54
+│   │   ├── 55
+│   │   ├── 56
+│   │   ├── 57
+│   │   ├── 58
+│   │   ├── 59
+│   │   ├── 5a
+│   │   ├── 5b
+│   │   ├── 5c
+│   │   ├── 5d
+│   │   ├── 5e
+│   │   ├── 5f
+│   │   ├── 60
+│   │   ├── 61
+│   │   ├── 62
+│   │   ├── 63
+│   │   ├── 65
+│   │   ├── 66
+│   │   ├── 67
+│   │   ├── 68
+│   │   ├── 69
+│   │   ├── 6a
+│   │   ├── 6b
+│   │   ├── 6c
+│   │   ├── 6d
+│   │   ├── 6e
+│   │   ├── 6f
+│   │   ├── 70
+│   │   ├── 71
+│   │   ├── 72
+│   │   ├── 73
+│   │   ├── 74
+│   │   ├── 75
+│   │   ├── 76
+│   │   ├── 77
+│   │   ├── 78
+│   │   ├── 79
+│   │   ├── 7a
+│   │   ├── 7b
+│   │   ├── 7c
+│   │   ├── 7d
+│   │   ├── 7e
+│   │   ├── 80
+│   │   ├── 81
+│   │   ├── 82
+│   │   ├── 83
+│   │   ├── 84
+│   │   ├── 85
+│   │   ├── 86
+│   │   ├── 87
+│   │   ├── 88
+│   │   ├── 89
+│   │   ├── 8b
+│   │   ├── 8c
+│   │   ├── 8d
+│   │   ├── 8e
+│   │   ├── 8f
+│   │   ├── 90
+│   │   ├── 91
+│   │   ├── 92
+│   │   ├── 93
+│   │   ├── 94
+│   │   ├── 95
+│   │   ├── 96
+│   │   ├── 97
+│   │   ├── 98
+│   │   ├── 9a
+│   │   ├── 9b
+│   │   ├── 9c
+│   │   ├── 9d
+│   │   ├── 9e
+│   │   ├── 9f
+│   │   ├── a0
+│   │   ├── a1
+│   │   ├── a2
+│   │   ├── a3
+│   │   ├── a4
+│   │   ├── a5
+│   │   ├── a6
+│   │   ├── a7
+│   │   ├── a8
+│   │   ├── a9
+│   │   ├── aa
+│   │   ├── ab
+│   │   ├── ad
+│   │   ├── ae
+│   │   ├── af
+│   │   ├── b0
+│   │   ├── b1
+│   │   ├── b2
+│   │   ├── b3
+│   │   ├── b4
+│   │   ├── b5
+│   │   ├── b6
+│   │   ├── b7
+│   │   ├── b8
+│   │   ├── b9
+│   │   ├── ba
+│   │   ├── bb
+│   │   ├── bc
+│   │   ├── be
+│   │   ├── bf
+│   │   ├── c0
+│   │   ├── c1
+│   │   ├── c2
+│   │   ├── c3
+│   │   ├── c4
+│   │   ├── c5
+│   │   ├── c6
+│   │   ├── c7
+│   │   ├── c8
+│   │   ├── c9
+│   │   ├── ca
+│   │   ├── cb
+│   │   ├── cc
+│   │   ├── ce
+│   │   ├── cf
+│   │   ├── d0
+│   │   ├── d1
+│   │   ├── d2
+│   │   ├── d3
+│   │   ├── d4
+│   │   ├── d5
+│   │   ├── d6
+│   │   ├── d7
+│   │   ├── d8
+│   │   ├── d9
+│   │   ├── da
+│   │   ├── db
+│   │   ├── dd
+│   │   ├── de
+│   │   ├── df
+│   │   ├── e0
+│   │   ├── e1
+│   │   ├── e2
+│   │   ├── e3
+│   │   ├── e4
+│   │   ├── e5
+│   │   ├── e6
+│   │   ├── e8
+│   │   ├── e9
+│   │   ├── ea
+│   │   ├── ec
+│   │   ├── ed
+│   │   ├── ee
+│   │   ├── ef
+│   │   ├── f0
+│   │   ├── f1
+│   │   ├── f2
+│   │   ├── f3
+│   │   ├── f4
+│   │   ├── f5
+│   │   ├── f6
+│   │   ├── f7
+│   │   ├── f8
+│   │   ├── f9
+│   │   ├── fa
+│   │   ├── fb
+│   │   ├── fc
+│   │   ├── fd
+│   │   ├── fe
+│   │   ├── ff
+│   │   ├── info
+│   │   └── pack
+│   └── refs
+│       ├── heads
+│       ├── remotes
+│       └── tags
+├── .local
+│   ├── bin
+│   ├── lib
+│   │   └── python3.8
+│   └── share
+│       ├── applications
+│       ├── fonts
+│       ├── larbs
+│       ├── nyxt
+│       ├── virtualenv
+│       ├── webkitgtk
+│       └── xorg
+└── scripts
+    └── .scripts
+        ├── cron
+        ├── i3cmds
+        ├── statusbar
+        └── tools
+
+370 directories
+:end:
+** =$HOME/.config=
 ** =$HOME/git=
 keep it as =category/{repo, repo, repo}= for sanity
 #+begin_src shell :results drawer :tangle no
@@ -57,6 +442,7 @@ tree -L 2
 
 12 directories, 1 file
 :end:
+
 
 * configuration
 ** testing
@@ -115,7 +501,7 @@ test-load-file() {
       echo "...TESTING $FILE"
       echo ".....LOADING 'GUIX REPL -L $GUIX_LOADPATH_MY $FILE'"
       guix repl -L $GUIX_LOADPATH_MY $FILE \
-          && qz-color $qz_greener ".....PASSED: $FILE"
+          && qz_color $qz_greener ".....PASSED: $FILE"
     )
 }
 
@@ -267,6 +653,66 @@ tree $HOME/dotfiles/.config/guix
 | .local/bin/update-dotfiles.sh              |
 **** an index of nested =debugs=
 
+** channels
+:: [[https://guix.gnu.org/en/manual/en/html_node/Channels.html#Channels][Channels (GNU Guix Reference Manual)]]
+- [[https://gitlab.com/nonguix/nonguix][Nonguix / nonguix · GitLab]]; nonfree linux-kernel for wifi drivers
+
+*** .config/guix/channels.scm :file:
+#+begin_src scheme :tangle .config/guix/channels.scm
+;; GENERATED BY ~/dotfiles/system.org
+(list
+ (channel
+  (name 'guix)
+  (url "https://git.savannah.gnu.org/git/guix.git"))
+ ;; for the kernel + firmware
+ (channel
+  (name 'nonguix)
+  (url "https://gitlab.com/nonguix/nonguix"))
+ ;; for emacs-libgccjit
+ (channel
+  (name 'flat)
+  (url "https://github.com/flatwhatson/guix-channel.git")
+  (commit
+   "86fb7253a4384b70c77739a0e03115be75d60ad1")
+  (introduction
+   (make-channel-introduction
+    "33f86a4b48205c0dc19d7c036c85393f0766f806"
+    (openpgp-fingerprint
+     "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
+ ;; a great effort from infra hpc
+ ;;(channel
+ ;; (name 'guix-past)
+
+ ;; (url "https://gitlab.inria.fr/guix-hpc/guix-past")
+ ;; (introduction
+ ;;  (make-channel-introduction
+ ;;   "0c119db2ea86a389769f4d2b9c6f5c41c027e336"
+ ;;   (openpgp-fingerprint
+ ;;    "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))
+)
+#+end_src
+*** HACK inferiors for python
+this does not work how I want; it will not install python from the revision of
+guix specified by the given commit sha
+#+begin_src scheme :tangle no
+(use-modules (guix inferior)
+             (guix)
+             (srfi srfi-1))
+
+(define pychannel
+  (list (channel
+         (name 'guix)
+         (url "https://git.savannah.gnu.org/git/guix.git")
+         (commit "5c798ca71dcd009896654da7d6a1f8942c6f3c50"))))
+
+(define inferior
+  (inferior-for-channels pychannel))
+
+(packages->manifest
+ (list (first (lookup-inferior-packages inferior "python"))))
+#+end_src
+
+#+RESULTS:
 
 ** =(qzdl cosas)=
 :PROPERTIES:
@@ -353,8 +799,19 @@ Section \"InputClass\"
   Driver \"libinput\"
   MatchDevicePath \"/dev/input/event*\"
   MatchIsKeyboard \"on\"
-EndSection
-")
+EndSection")
+#+end_src
+
+**** libinput-gestures
+#+begin_src :tangle no
+# previously ~/.config/libinput-gestures.conf
+
+gesture: swipe right 3 xdotool key Alt+Left
+gesture: swipe left 3 xdotool key Alt+Right
+
+# Zoom in / Zoom out
+gesture: pinch out xdotool key Ctrl+plus
+gesture: pinch in xdotool key Ctrl+minus
 #+end_src
 **** TODO xorg screentearing-rule
 :: https://www.dedoimedo.com/computers/linux-intel-graphics-video-tearing.html
@@ -470,6 +927,7 @@ test-load-file $HOME/dotfiles/.config/guix/qzdl/services.scm
             my-xorg-service
             my-x11-socket-directory-service
 
+            my-udev-service
             my-dbus-service
             my-ntp-service
             my-elogind-service
@@ -522,7 +980,9 @@ users must be in the =lp= group
 ***** TODO sshd service
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
 (define my-ssh-service
-  (service openssh-service-type))
+  (service openssh-service-type
+           (openssh-configuration
+            (x11-forwarding? #t))))
 #+end_src
 
 ***** virtualisation; libvirt
@@ -533,6 +993,7 @@ users must be in the =lp= group
             (unix-sock-group "libvirt")
             (tls-port "16555"))))
 #+end_src
+
 ***** TODO (slim)login & xorg
 :: [[https://guix.gnu.org/manual/en/html_node/X-Window.html][X Window (GNU Guix Reference Manual)]]
 :: /run/current-system/profile/share
@@ -551,8 +1012,9 @@ a window manager must be specified in the system-packages
             (xorg-configuration
              (xorg-configuration
               (keyboard-layout my-keyboard-layout)
-              (extra-config (list %xorg-libinput-config
-                                  %xorg-intel-antitearing-i915)))))))
+              (extra-config
+               (list %xorg-libinput-config
+                     %xorg-intel-antitearing-i915)))))))
 #+end_src
 
 #+RESULTS:
@@ -584,10 +1046,10 @@ a window manager must be specified in the system-packages
 :: (gnu services base)
 
 #+begin_src scheme :tangle .config/guix/qzdl/services.scm
-(define my-udev-service-type
-  (service udev-service-type
-           (udev-configuration
-            (rules %udev-rule-backlight))))
+(define my-udev-service
+  (simple-service 'udev-rules udev-service-type
+                  (udev-configuration
+                   (rules %udev-rule-backlight))))
 #+end_src
 
 ***** ntp; network time
@@ -640,7 +1102,6 @@ grafana, prometheus, ...
         my-wpa-supplicant-service
         my-elogind-service))
 #+end_src
-
 
 ** =(qzdl package)=
 :: .config/guix/qzdl/package
@@ -1411,7 +1872,7 @@ and intel ucode images to the bootloader config in initrd.
    (bootloader
     (bootloader-configuration
      (bootloader grub-efi-bootloader)
-     (target "/boot/efi")
+     (targets '("/boot/efi"))
      (keyboard-layout keyboard-layout)))
 
    (users
@@ -1447,6 +1908,7 @@ and intel ucode images to the bootloader config in initrd.
 
    (services
     (cons* my-docker-service
+           my-udev-service
            (extra-special-file
             "/usr/bin/env"
             (file-append coreutils "/bin/env"))
@@ -1460,6 +1922,7 @@ and intel ucode images to the bootloader config in initrd.
            nss-certs
            %base-packages))))
 #+end_src
+
 ****** TODO inspect =%base-*= stuff and chuck out
 
 *** =(qzdl system tiny)=  :file:
@@ -1908,8 +2371,8 @@ for f in $(find "$tmpbase/") ; do
     echo "...sourcing $f"
 
     if $(source "$f"); then
-        qz-color $qz_greener ".....PASSED: $f"
-    else qz-color $qz_red ".....FAILED: $f"
+        qz_color $qz_greener ".....PASSED: $f"
+    else qz_color $qz_red ".....FAILED: $f"
     fi;
 done;
 
@@ -1941,67 +2404,68 @@ alias \
 
 # easy check files
 alias \
-  aa='qz-get-aliases' \
-  af='qz-get-functions'
+  aa='qz_get_aliases' \
+  af='qz_get_functions'
 
 # my functions
 alias \
-  gR='qz-guix-reconfigure' \
-  gRd='qz-guix-reconfigure-debug' \
-  gse='qz-guix-source-extra-profile'
-  gsp='qz-guix-source-profile'
-  dlsh='qz-download-scihub-doi'
+  gR='qz_guix_reconfigure' \
+  gRd='qz_guix_reconfigure_debug' \
+  gse='qz_guix_source_extra_profile'
+  gsp='qz_guix_source_profile'
+  dlsh='qz_download_scihub_doi'
 #+end_src
 *** functions
 #+begin_src shell :tangle .config/shell/functions :results drawer
 #!/bin/bash
-qz-color() {
+qz_color() {
     echo -e "$1$2${qz_reset}"
 }
 
-qz-number-lines() {
+qz_number_lines() {
     awk '{print NR" "$0}';
 }
 
-qz-reverse() {
-    qz-number-lines | sort -k1 -n -r | sed 's/^[^ ]* //g';
+qz_reverse() {
+    qz_number_lines | sort -k1 -n -r | sed 's/^[^ ]* //g';
 }
 
 # guix reconfigure, and debug to the repl
-qz-guix-reconfigure-debug()  {
+qz_guix_reconfigure_debug()  {
     sudo -E guix repl -L "$HOME/.config/guix" $@;
 }
 
-qz-guix-reconfigure()  {
+qz_guix_reconfigure()  {
     sudo -E guix system \
         -L "$HOME/.config/guix" \
         reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
 # guix profile commands; make it easy to switch and check
-qz-guix-source-extra-profile() {
-    qz-guix-source-profile "$GUIX_EXTRA_PROFILES/$@";
+qz_guix_source_extra_profile() {
+    qz_guix_source_profile "$GUIX_EXTRA_PROFILES/$@";
 }
-qz-guix-source-profile() {
+
+qz_guix_source_profile() {
     export GUIX_PROFILE="$@"
     . "$GUIX_PROFILE/etc/profile";
 }
 
-qz-download-scihub-doi() {
+qz_download_scihub_doi() {
     curl -O \
         $(curl -s http://sci-hub.tw/"$@" \
           | grep location.href \
           | grep -o http.*pdf);
 }
 
-qz-get-functions() {
+qz_get_functions() {
   FILE="$QZ_FUNCTIONS"
   cat $FILE \
-    | grep -on '^qz-.*()' \
+    | grep -on '^qz_.*()' \
     | awk -F: '{print file":"$1,$2}' file=$FILE
 }
 
-qz-get-aliases() {
+qz_get_aliases() {
   FILE="$QZ_ALIASES"
   cat $FILE \
     | grep -on "\s.*='.*'" \
@@ -2049,10 +2513,10 @@ export TERMINAL='emacsclient -c -e "(vterm)" -a emacs -e "(vterm)"'
 export BROWSER='firefox'
 export FILE=$EDITOR
 
-# display scaling for hidpi
 export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
-export GDK_SCALE=2
-export GDK_DPI_SCALE=0.5
+# TODO per machine display scaling for hidpi
+export GDK_SCALE=1     # 2
+export GDK_DPI_SCALE=1 # .5
 
 # fix ~/ carnage
 export XDG_CONFIG_HOME="$HOME/.config"
@@ -2322,6 +2786,143 @@ esac
 *** TODO screenrecord
 :: check ~/dotfiles/scripts/.scripts/i3cmds/dmenurecord
 **** gif
+*** TODO recoll index on ac
+
+depends on 'on_ac_power'
+- defaults to RUN
+
+#+begin_src shell :tangle .local/bin/recoll_index_on_ac.sh
+#!/bin/sh
+# This is a shell script that starts and stops the recollindex daemon
+# depending on whether or not the power supply is plugged in.  It should be
+# called from the file ~/.config/autostart/recollindex.desktop.
+#
+# That is: make the script executable (chmod +x) and replace in
+# recollindex.desk the line:
+#   Exec=recollindex -w 60 -m
+# With
+#   Exec=/path/to/recoll_index_on_ac.sh
+#
+#
+# By: The Doctor (drwho at virtadpt dot net)
+# License: GPLv3
+#
+# Modifications by J.F Dockes
+#  - replaced "acpi" usage with "on_ac_power" which seems to be both
+#    more common and more universal.
+#  - Changed the default to be that we run recollindex if we can't determine
+#    power status (ie: on_ac_power not installed or not working: we're most
+#    probably not running on a laptop).
+
+INDEXER="recollindex -w 60 -m"
+ACPI=`which on_ac_power`
+
+# If the on_ac_power script isn't installed, warn, but run anyway. Maybe
+# this is not a laptop or not linux.
+if test "x$ACPI" = "x" ; then
+    echo "on_ac_power utility not found. Starting recollindex anyway."
+fi
+
+while true; do
+    # Determine whether or not the power supply is plugged in.
+    if test "x$ACPI" != "x" ; then
+        on_ac_power
+        STATUS=$?
+    else
+        STATUS=0
+    fi
+
+    # Get the PID of the indexing daemon.
+    if test -f ~/.recoll/index.pid ; then
+       PID=`cat ~/.recoll/index.pid`
+       # Make sure that this is recollindex running. pid could have
+       # been reallocated
+       ps ax | egrep "^[ \t]*$PID " | grep -q recollindex || PID=""
+    fi
+#    echo "Recollindex pid is $PID"
+
+    if test $STATUS -eq 1 ; then
+	# The power supply is not plugged in.  See if the indexing daemon is
+	# running, and if it is, kill it.  The indexing daemon will not be
+	# started.
+        if test x"$PID" != x; then
+	    kill $PID
+	fi
+    else
+	# The power supply is plugged in or we just don't know.
+        # See if the indexing daemon is running, and if it's not start it.
+        if test -z "$PID" ; then
+	    $INDEXER
+	fi
+    fi
+
+    # Go to sleep for a while.
+    sleep 120
+    continue
+done
+
+#+end_src
+*** TODO autocommit
+#+begin_src bash :tangle .local/bin/auto-commit
+#!/bin/bash
+
+# A small script for committing and pushing a git repository
+#
+# for ~/.local/bin/
+# <exec-shell-cmd "chmod +x ~/dotfiles/cron/.local/bin/auto-commit">
+
+#                      ██                                                           ██   ██
+#                     ░██                                                          ░░   ░██
+#   ██████   ██   ██ ██████  ██████         █████   ██████  ██████████  ██████████  ██ ██████
+#  ░░░░░░██ ░██  ░██░░░██░  ██░░░░██ █████ ██░░░██ ██░░░░██░░██░░██░░██░░██░░██░░██░██░░░██░
+#   ███████ ░██  ░██  ░██  ░██   ░██░░░░░ ░██  ░░ ░██   ░██ ░██ ░██ ░██ ░██ ░██ ░██░██  ░██
+#  ██░░░░██ ░██  ░██  ░██  ░██   ░██      ░██   ██░██   ░██ ░██ ░██ ░██ ░██ ░██ ░██░██  ░██
+# ░░████████░░██████  ░░██ ░░██████       ░░█████ ░░██████  ███ ░██ ░██ ███ ░██ ░██░██  ░░██
+#  ░░░░░░░░  ░░░░░░    ░░   ░░░░░░         ░░░░░   ░░░░░░  ░░░  ░░  ░░ ░░░  ░░  ░░ ░░    ░░
+
+git add .
+git commit -m "auto-commit | $(date -u)"
+git push && notify-send "Successfully pushed $PWD"
+#+end_src
+
+* dotfiles
+** psql
+#+begin_src psql :tangle .psqlrc
+--                              ██
+--     ██████           ████   ░██
+--    ░██░░░██  ██████ ██░░██  ░██ ██████  █████
+--    ░██  ░██ ██░░░░ ░██ ░██  ░██░░██░░█ ██░░░██
+--    ░██████ ░░█████ ░░█████  ░██ ░██ ░ ░██  ░░
+--  ██░██░░░   ░░░░░██ ░░░░██  ░██ ░██   ░██   ██
+-- ░██░██      ██████     ░███ ███░███   ░░█████
+-- ░░ ░░      ░░░░░░      ░░░ ░░░ ░░░     ░░░░░
+--
+-- <exec-shell-cmd "cd ~/dotfiles && stow psql">
+
+-- signifier for null values
+\pset null '(null)'
+
+-- nice glyphs
+\pset linestyle unicode
+
+-- upcase completion
+\set COMP_KEYWORD_CASE upper
+
+-- just fail by default see <link-to-elisp-doc 'qzdl/psql-toggle-error-rollback>
+\set ON_ERROR_ROLLBACK off
+#+end_src
+
+** sbcl
+#+begin_src lisp :tangle .sbclrc
+;;; The following lines added by ql:add-to-init-file:
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+
+#+end_src
 
 ** wget
 *** wgetrc
@@ -2365,76 +2966,7 @@ for a colorful Guile experience.\n\n"))))
 
 #+RESULTS:
 
-** channels
-:: [[https://guix.gnu.org/en/manual/en/html_node/Channels.html#Channels][Channels (GNU Guix Reference Manual)]]
-- [[https://gitlab.com/nonguix/nonguix][Nonguix / nonguix · GitLab]]; nonfree linux-kernel for wifi drivers
-
-*** .config/guix/channels.scm :file:
-#+begin_src scheme :tangle .config/guix/channels.scm
-;; GENERATED BY ~/dotfiles/system.org
-(list
- (channel
-  (name 'guix)
-  (url "https://git.savannah.gnu.org/git/guix.git"))
- ;; for the kernel + firmware
- (channel
-  (name 'nonguix)
-  (url "https://gitlab.com/nonguix/nonguix"))
- ;; for emacs-libgccjit
- (channel
-  (name 'flat)
-  (url "https://github.com/flatwhatson/guix-channel.git")
-  (commit
-   "86fb7253a4384b70c77739a0e03115be75d60ad1")
-  (introduction
-   (make-channel-introduction
-    "33f86a4b48205c0dc19d7c036c85393f0766f806"
-    (openpgp-fingerprint
-     "736A C00E 1254 378B A982  7AF6 9DBE 8265 81B6 4490"))))
- ;; a great effort from infra hpc
- ;;(channel
- ;; (name 'guix-past)
-
- ;; (url "https://gitlab.inria.fr/guix-hpc/guix-past")
- ;; (introduction
- ;;  (make-channel-introduction
- ;;   "0c119db2ea86a389769f4d2b9c6f5c41c027e336"
- ;;   (openpgp-fingerprint
- ;;    "3CE4 6455 8A84 FDC6 9DB4  0CFB 090B 1199 3D9A EBB5"))))
-)
-#+end_src
-
-** HACK inferiors for python
-this does not work how I want; it will not install python from the revision of
-guix specified by the given commit sha
-#+begin_src scheme :tangle no
-(use-modules (guix inferior)
-             (guix)
-             (srfi srfi-1))
-
-(define pychannel
-  (list (channel
-         (name 'guix)
-         (url "https://git.savannah.gnu.org/git/guix.git")
-         (commit "5c798ca71dcd009896654da7d6a1f8942c6f3c50"))))
-
-(define inferior
-  (inferior-for-channels pychannel))
-
-(packages->manifest
- (list (first (lookup-inferior-packages inferior "python"))))
-#+end_src
-
-#+RESULTS:
-
-* other
-** local services hell
-#+begin_src shell
-sudo cryptsetup luksOpen /dev/sda1 xhdd
-sudo mount -o rw /dev/mapper/xhdd /media/xhdd
-sudo chown -R $USER /var/lib/sonarr/ /var/lib/radarr/ /usr/lib/radarr/ /usr/lib/sonarr/ /media/xhdd/ &&  sudo systemctl restart sonarr radarr  && sudo systemctl daemon-reload
-#+end_src
-** xsession
+** .xsession
 #+begin_src shell :tangle .emacs.d/start-exwm.sh
 #!/bin/sh
 
@@ -2472,10 +3004,73 @@ xss-lock -- slock &
 # Fire it up
 exec dbus-launch --exit-with-session emacs -mm --debug-init --use-exwm
 #+end_src
+** stow
+*** .stowrc
+#+begin_src bash :tangle .stowrc
+--target /home/samuel/
+#+end_src
 
-* merge conflict prolly
+*** .stow-ignore
+#+begin_src :tangle .stow-global-ignore
+docs/
+README.*
+.stow-global-ignore
 
-** TODO emacs config as-a-package
+# .gitsubmodules & others
+\.git.*
+
+# emacs org files
+.*\.org
+#+end_src
+** *.desktop
+:: .local/share/applications
+
+*** org-protocol
+#+begin_src :tangle .local/share/applications/recollindex.desktop
+[Desktop Entry]
+Name=Org-Protocol
+Exec=emacsclient %u
+Icon=emacs-icon
+Type=Application
+Terminal=false
+MimeType=x-scheme-handler/org-protocol
+#+end_src
+
+*** recollindex
+#+begin_src :tangle .local/share/applications/recollindex.desktop
+[Desktop Entry]
+Name=Recoll real time indexer
+Comment=Runs in background to extract and index text from modified documents
+Icon=system-run
+Exec=recoll-index-on-ac.sh
+Terminal=false
+TerminalOptions=
+Type=Application
+Categories=Utility;Filesystem;Database;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+X-KDE-UniqueApplet=true
+#+end_src
+
+*** mimeapps
+#+begin_src :tangle .config/mimeapps.list
+
+#+end_src
+** emacs
+*** .eshellrc
+#+begin_src shell :tangle .eshell
+alias sudo "eshell/sudo $*"
+
+;; VC
+alias vc "vc-dir ." "Get some version control information for ./"
+alias g git
+
+GUIX_PROFILE="/home/samuel/.guix-profile"
+. "$GUIX_PROFILE/etc/profile"
+#+end_src
+
+* TODO emacs config as-a-package
 basically, to be able to update my emacs config with ~guix pull~
 *** python runtime in docker
 #+begin_src bash :tangle .emacs.d/docker-pyshell.sh
@@ -2522,7 +3117,8 @@ for file in $(find $HOME/.config/guix/) ; do
     echo "deps: running guild for deps of $file, to $df"
     guild use2dot $file > $df
 
-    for driver in dot neato twopi circo fdp sfdp patchwork ; do
+    drivers=(dot neato twopi circo fdp sfdp patchwork)
+    for driver in $drivers ; do
         dp="$df.png"
         echo "visualizing: $driver, for $df, to $dp"
         $driver $df -Tpng -o $dp
@@ -2533,112 +3129,32 @@ done
 #+RESULTS:
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/services.scm             | to services.scm      |                         |
 | visualizing: dot                                                                       | for services.scm     | to services.scm.png     |
-| visualizing: neato                                                                     | for services.scm     | to services.scm.png     |
-| visualizing: twopi                                                                     | for services.scm     | to services.scm.png     |
-| visualizing: circo                                                                     | for services.scm     | to services.scm.png     |
-| visualizing: fdp                                                                       | for services.scm     | to services.scm.png     |
-| visualizing: sfdp                                                                      | for services.scm     | to services.scm.png     |
-| visualizing: patchwork                                                                 | for services.scm     | to services.scm.png     |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/rules.scm                | to rules.scm         |                         |
 | visualizing: dot                                                                       | for rules.scm        | to rules.scm.png        |
-| visualizing: neato                                                                     | for rules.scm        | to rules.scm.png        |
-| visualizing: twopi                                                                     | for rules.scm        | to rules.scm.png        |
-| visualizing: circo                                                                     | for rules.scm        | to rules.scm.png        |
-| visualizing: fdp                                                                       | for rules.scm        | to rules.scm.png        |
-| visualizing: sfdp                                                                      | for rules.scm        | to rules.scm.png        |
-| visualizing: patchwork                                                                 | for rules.scm        | to rules.scm.png        |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/qzdl.scm                 | to qzdl.scm          |                         |
-| visualizing: dot                                                                       | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: neato                                                                     | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: twopi                                                                     | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: circo                                                                     | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: fdp                                                                       | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: sfdp                                                                      | for qzdl.scm         | to qzdl.scm.png         |
-| visualizing: patchwork                                                                 | for qzdl.scm         | to qzdl.scm.png         |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/base.scm          | to base.scm          |                         |
 | visualizing: dot                                                                       | for base.scm         | to base.scm.png         |
-| visualizing: neato                                                                     | for base.scm         | to base.scm.png         |
-| visualizing: twopi                                                                     | for base.scm         | to base.scm.png         |
-| visualizing: circo                                                                     | for base.scm         | to base.scm.png         |
-| visualizing: fdp                                                                       | for base.scm         | to base.scm.png         |
-| visualizing: sfdp                                                                      | for base.scm         | to base.scm.png         |
-| visualizing: patchwork                                                                 | for base.scm         | to base.scm.png         |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/install.scm       | to install.scm       |                         |
 | visualizing: dot                                                                       | for install.scm      | to install.scm.png      |
-| visualizing: neato                                                                     | for install.scm      | to install.scm.png      |
-| visualizing: twopi                                                                     | for install.scm      | to install.scm.png      |
-| visualizing: circo                                                                     | for install.scm      | to install.scm.png      |
-| visualizing: fdp                                                                       | for install.scm      | to install.scm.png      |
-| visualizing: sfdp                                                                      | for install.scm      | to install.scm.png      |
-| visualizing: patchwork                                                                 | for install.scm      | to install.scm.png      |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/minimal.scm       | to minimal.scm       |                         |
 | visualizing: dot                                                                       | for minimal.scm      | to minimal.scm.png      |
-| visualizing: neato                                                                     | for minimal.scm      | to minimal.scm.png      |
-| visualizing: twopi                                                                     | for minimal.scm      | to minimal.scm.png      |
-| visualizing: circo                                                                     | for minimal.scm      | to minimal.scm.png      |
-| visualizing: fdp                                                                       | for minimal.scm      | to minimal.scm.png      |
-| visualizing: sfdp                                                                      | for minimal.scm      | to minimal.scm.png      |
-| visualizing: patchwork                                                                 | for minimal.scm      | to minimal.scm.png      |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/manifest.scm     | to manifest.scm      |                         |
 | visualizing: dot                                                                       | for manifest.scm     | to manifest.scm.png     |
-| visualizing: neato                                                                     | for manifest.scm     | to manifest.scm.png     |
-| visualizing: twopi                                                                     | for manifest.scm     | to manifest.scm.png     |
-| visualizing: circo                                                                     | for manifest.scm     | to manifest.scm.png     |
-| visualizing: fdp                                                                       | for manifest.scm     | to manifest.scm.png     |
-| visualizing: sfdp                                                                      | for manifest.scm     | to manifest.scm.png     |
-| visualizing: patchwork                                                                 | for manifest.scm     | to manifest.scm.png     |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/python-3.6.4.scm | to python-3.6.4.scm  |                         |
 | visualizing: dot                                                                       | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: neato                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: twopi                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: circo                                                                     | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: fdp                                                                       | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: sfdp                                                                      | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| visualizing: patchwork                                                                 | for python-3.6.4.scm | to python-3.6.4.scm.png |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/go-mvdan-sh.scm  | to go-mvdan-sh.scm   |                         |
 | visualizing: dot                                                                       | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: neato                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: twopi                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: circo                                                                     | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: fdp                                                                       | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: sfdp                                                                      | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| visualizing: patchwork                                                                 | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/xps.scm           | to xps.scm           |                         |
 | visualizing: dot                                                                       | for xps.scm          | to xps.scm.png          |
-| visualizing: neato                                                                     | for xps.scm          | to xps.scm.png          |
-| visualizing: twopi                                                                     | for xps.scm          | to xps.scm.png          |
-| visualizing: circo                                                                     | for xps.scm          | to xps.scm.png          |
-| visualizing: fdp                                                                       | for xps.scm          | to xps.scm.png          |
-| visualizing: sfdp                                                                      | for xps.scm          | to xps.scm.png          |
-| visualizing: patchwork                                                                 | for xps.scm          | to xps.scm.png          |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/donutrust.scm     | to donutrust.scm     |                         |
 | visualizing: dot                                                                       | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: neato                                                                     | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: twopi                                                                     | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: circo                                                                     | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: fdp                                                                       | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: sfdp                                                                      | for donutrust.scm    | to donutrust.scm.png    |
-| visualizing: patchwork                                                                 | for donutrust.scm    | to donutrust.scm.png    |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/cleanpi.scm       | to cleanpi.scm       |                         |
+| visualizing: dot                                                                       | for cleanpi.scm      | to cleanpi.scm.png      |
+| deps: running guild for deps of /home/samuel//.config/guix/qzdl/jobs.scm                 | to jobs.scm          |                         |
+| visualizing: dot                                                                       | for jobs.scm         | to jobs.scm.png         |
 | deps: running guild for deps of /home/samuel//.config/guix/qzdl/cosas.scm                | to cosas.scm         |                         |
 | visualizing: dot                                                                       | for cosas.scm        | to cosas.scm.png        |
-| visualizing: neato                                                                     | for cosas.scm        | to cosas.scm.png        |
-| visualizing: twopi                                                                     | for cosas.scm        | to cosas.scm.png        |
-| visualizing: circo                                                                     | for cosas.scm        | to cosas.scm.png        |
-| visualizing: fdp                                                                       | for cosas.scm        | to cosas.scm.png        |
-| visualizing: sfdp                                                                      | for cosas.scm        | to cosas.scm.png        |
-| visualizing: patchwork                                                                 | for cosas.scm        | to cosas.scm.png        |
 | deps: running guild for deps of /home/samuel//.config/guix/channels.scm                  | to channels.scm      |                         |
 | visualizing: dot                                                                       | for channels.scm     | to channels.scm.png     |
-| visualizing: neato                                                                     | for channels.scm     | to channels.scm.png     |
-| visualizing: twopi                                                                     | for channels.scm     | to channels.scm.png     |
-| visualizing: circo                                                                     | for channels.scm     | to channels.scm.png     |
-| visualizing: fdp                                                                       | for channels.scm     | to channels.scm.png     |
-| visualizing: sfdp                                                                      | for channels.scm     | to channels.scm.png     |
-| visualizing: patchwork                                                                 | for channels.scm     | to channels.scm.png     |
-
-
-[[file:~/life/roam/daily/private-2021-08-12.org::*long table names, if statically aliased, should be done in imports][ong table names, if statically aliased, should be done in imports]]
-
 
 * Footnotes
 [fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]
@@ -2652,3 +3168,5 @@ done
 #+begin_src bash :tangle no
   timedatectl | grep -i "time zone"
 #+end_src
+
+#+RESULTS:

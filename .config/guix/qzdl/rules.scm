@@ -33,8 +33,7 @@ Section \"InputClass\"
   Driver \"libinput\"
   MatchDevicePath \"/dev/input/event*\"
   MatchIsKeyboard \"on\"
-EndSection
-")
+EndSection")
 
 (define %xorg-intel-antitearing-base
   "Section \"Device\"
@@ -45,3 +44,12 @@ EndSection")
 
 (define %xorg-intel-antitearing-i915
  (format #f %xorg-intel-antitearing-base "i915"))
+
+# previously ~/.config/libinput-gestures.conf
+
+gesture: swipe right 3 xdotool key Alt+Left
+gesture: swipe left 3 xdotool key Alt+Right
+
+# Zoom in / Zoom out
+gesture: pinch out xdotool key Ctrl+plus
+gesture: pinch in xdotool key Ctrl+minus
