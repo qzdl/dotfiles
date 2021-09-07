@@ -4,22 +4,12 @@
   #:use-module (gnu)
   #:use-module (gnu system)
   #:use-module (srfi srfi-1)
-  #:use-module (gnu services pm)             ;; clipboard menu
-  #:use-module (gnu services cups)           ;; printing
-  #:use-module (gnu services docker)
-  #:use-module (gnu services databases)
-  #:use-module (gnu services virtualization) ;; VMs
-  #:use-module (gnu packages xorg)           ;; graphical display
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
   #:use-module (gnu packages audio)          ;;
   #:use-module (gnu packages emacs)          ;;
   #:use-module (gnu packages emacs-xyz)
   #:use-module (gnu packages pulseaudio)     ;; audio daemon
   #:use-module (gnu packages wm)             ;; lots of wm options (blote)
-  #:use-module (gnu packages cups)           ;; printing
-  #:use-module (gnu packages mtools)         ;; interact with ms disks
-  #:use-module (gnu packages gtk)            ;; gnome stuff  (blote)
-  #:use-module (gnu packages web-browsers)   ;; web browsers (blote)
   #:use-module (gnu packages linux)          ;; for bluez
   #:use-module (gnu packages xorg)           ;; xf86-input-libinput
   #:export (%minimal-services

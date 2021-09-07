@@ -19,435 +19,79 @@ inspired by [[https://config.daviwil.com/systems][System Configuration with Guix
 
 [[~/dotfiles/.doom.d/config.org::*globals]]
 
-#+begin_src emacs-lisp :tangle no
-(let* ((concepts '(test debug operating-system define))
-      (res (qz/headline-concepts concepts)))
-  (cl-loop for concept in concepts
-           do (cl-destructuring-bind (c h l) (assoc concept res)
-                (insert "**** ")
-                (insert h)
-                (insert "\n"))))
-#+end_src
-
 
 * housekeeping
+:: .local/bin/housekeeping.sh
 
-#+begin_src shell :results drawer :tangle no
-echo -e "number of files: $(find . -d | wc -l)\n"
-tree -a $HOME/dotfiles -Ld 3
+** description
+#+begin_src shell :tangle .local/bin/housekeeping.sh :results drawer
+echo -e "number of files: $(find . | wc -l)\n"
 #+end_src
 
 #+RESULTS:
 :results:
-number of files: 65323
+number of files: 65390
 
-/home/samuel//dotfiles
-├── .config
-│   ├── bashtop
-│   ├── calibre
-│   │   ├── conversion
-│   │   ├── fonts
-│   │   └── store
-│   ├── dunst
-│   ├── fontconfig
-│   ├── getkeys
-│   ├── gtk-2.0
-│   ├── gtk-3.0
-│   ├── guile
-│   ├── guix
-│   │   ├── current -> /var/guix/profiles/per-user/samuel/current-guix
-│   │   └── qzdl
-│   ├── htop
-│   ├── lyrics
-│   ├── mpd
-│   │   └── playlists
-│   ├── mpv
-│   ├── ncmpcpp
-│   ├── neofetch
-│   ├── newsboat
-│   ├── nvim
-│   │   ├── autoload
-│   │   ├── fileconfig
-│   │   └── plugged
-│   ├── PCSX2
-│   │   ├── bios
-│   │   ├── inis_1.4.0
-│   │   └── memcards
-│   ├── qBittorrent
-│   │   └── rss
-│   ├── Recoll.org
-│   ├── shell
-│   ├── sxiv
-│   │   ├── exec
-│   │   └── sxiv
-│   ├── vlc
-│   ├── wallpapers
-│   ├── wget
-│   └── zathura
-│       └── zathura
-├── docs
-├── .doom.d
-│   ├── images
-│   ├── modules
-│   │   └── org-share
-│   ├── private
-│   ├── scripts
-│   ├── snippets
-│   │   └── kotl-mode
-│   └── themes
-├── .emacs.d
-│   ├── auto-save-list
-│   ├── bin
-│   ├── core
-│   │   ├── autoload
-│   │   ├── cli
-│   │   ├── templates
-│   │   └── test
-│   ├── docs
-│   ├── eln-cache
-│   │   ├── 28.0.50-a9f4c109
-│   │   └── 28.0.50-bb29a6db
-│   ├── .git
-│   │   ├── branches
-│   │   ├── hooks
-│   │   ├── info
-│   │   ├── logs
-│   │   ├── objects
-│   │   └── refs
-│   ├── .github
-│   │   ├── ISSUE_TEMPLATE
-│   │   └── workflows
-│   ├── .local
-│   │   ├── cache
-│   │   ├── etc
-│   │   └── straight
-│   ├── modules
-│   │   ├── app
-│   │   ├── checkers
-│   │   ├── completion
-│   │   ├── config
-│   │   ├── editor
-│   │   ├── emacs
-│   │   ├── email
-│   │   ├── input
-│   │   ├── lang
-│   │   ├── os
-│   │   ├── term
-│   │   ├── tools
-│   │   └── ui
-│   ├── test
-│   └── var
-│       └── slack-files
-├── .fonts
-│   └── static
-├── .git
-│   ├── branches
-│   ├── hooks
-│   ├── info
-│   ├── logs
-│   │   └── refs
-│   ├── objects
-│   │   ├── 00
-│   │   ├── 01
-│   │   ├── 02
-│   │   ├── 03
-│   │   ├── 04
-│   │   ├── 05
-│   │   ├── 06
-│   │   ├── 07
-│   │   ├── 08
-│   │   ├── 0a
-│   │   ├── 0b
-│   │   ├── 0c
-│   │   ├── 0d
-│   │   ├── 0e
-│   │   ├── 0f
-│   │   ├── 10
-│   │   ├── 11
-│   │   ├── 12
-│   │   ├── 13
-│   │   ├── 14
-│   │   ├── 15
-│   │   ├── 16
-│   │   ├── 17
-│   │   ├── 18
-│   │   ├── 19
-│   │   ├── 1a
-│   │   ├── 1b
-│   │   ├── 1d
-│   │   ├── 1e
-│   │   ├── 1f
-│   │   ├── 20
-│   │   ├── 21
-│   │   ├── 23
-│   │   ├── 24
-│   │   ├── 25
-│   │   ├── 26
-│   │   ├── 27
-│   │   ├── 28
-│   │   ├── 29
-│   │   ├── 2a
-│   │   ├── 2b
-│   │   ├── 2c
-│   │   ├── 2d
-│   │   ├── 2e
-│   │   ├── 2f
-│   │   ├── 30
-│   │   ├── 31
-│   │   ├── 32
-│   │   ├── 33
-│   │   ├── 34
-│   │   ├── 35
-│   │   ├── 36
-│   │   ├── 37
-│   │   ├── 38
-│   │   ├── 39
-│   │   ├── 3a
-│   │   ├── 3b
-│   │   ├── 3c
-│   │   ├── 3e
-│   │   ├── 3f
-│   │   ├── 40
-│   │   ├── 41
-│   │   ├── 42
-│   │   ├── 43
-│   │   ├── 44
-│   │   ├── 45
-│   │   ├── 46
-│   │   ├── 47
-│   │   ├── 48
-│   │   ├── 49
-│   │   ├── 4a
-│   │   ├── 4c
-│   │   ├── 4d
-│   │   ├── 4e
-│   │   ├── 4f
-│   │   ├── 50
-│   │   ├── 51
-│   │   ├── 52
-│   │   ├── 53
-│   │   ├── 54
-│   │   ├── 55
-│   │   ├── 56
-│   │   ├── 57
-│   │   ├── 58
-│   │   ├── 59
-│   │   ├── 5a
-│   │   ├── 5b
-│   │   ├── 5c
-│   │   ├── 5d
-│   │   ├── 5e
-│   │   ├── 5f
-│   │   ├── 60
-│   │   ├── 61
-│   │   ├── 62
-│   │   ├── 63
-│   │   ├── 65
-│   │   ├── 66
-│   │   ├── 67
-│   │   ├── 68
-│   │   ├── 69
-│   │   ├── 6a
-│   │   ├── 6b
-│   │   ├── 6c
-│   │   ├── 6d
-│   │   ├── 6e
-│   │   ├── 6f
-│   │   ├── 70
-│   │   ├── 71
-│   │   ├── 72
-│   │   ├── 73
-│   │   ├── 74
-│   │   ├── 75
-│   │   ├── 76
-│   │   ├── 77
-│   │   ├── 78
-│   │   ├── 79
-│   │   ├── 7a
-│   │   ├── 7b
-│   │   ├── 7c
-│   │   ├── 7d
-│   │   ├── 7e
-│   │   ├── 80
-│   │   ├── 81
-│   │   ├── 82
-│   │   ├── 83
-│   │   ├── 84
-│   │   ├── 85
-│   │   ├── 86
-│   │   ├── 87
-│   │   ├── 88
-│   │   ├── 89
-│   │   ├── 8b
-│   │   ├── 8c
-│   │   ├── 8d
-│   │   ├── 8e
-│   │   ├── 8f
-│   │   ├── 90
-│   │   ├── 91
-│   │   ├── 92
-│   │   ├── 93
-│   │   ├── 94
-│   │   ├── 95
-│   │   ├── 96
-│   │   ├── 97
-│   │   ├── 98
-│   │   ├── 9a
-│   │   ├── 9b
-│   │   ├── 9c
-│   │   ├── 9d
-│   │   ├── 9e
-│   │   ├── 9f
-│   │   ├── a0
-│   │   ├── a1
-│   │   ├── a2
-│   │   ├── a3
-│   │   ├── a4
-│   │   ├── a5
-│   │   ├── a6
-│   │   ├── a7
-│   │   ├── a8
-│   │   ├── a9
-│   │   ├── aa
-│   │   ├── ab
-│   │   ├── ad
-│   │   ├── ae
-│   │   ├── af
-│   │   ├── b0
-│   │   ├── b1
-│   │   ├── b2
-│   │   ├── b3
-│   │   ├── b4
-│   │   ├── b5
-│   │   ├── b6
-│   │   ├── b7
-│   │   ├── b8
-│   │   ├── b9
-│   │   ├── ba
-│   │   ├── bb
-│   │   ├── bc
-│   │   ├── be
-│   │   ├── bf
-│   │   ├── c0
-│   │   ├── c1
-│   │   ├── c2
-│   │   ├── c3
-│   │   ├── c4
-│   │   ├── c5
-│   │   ├── c6
-│   │   ├── c7
-│   │   ├── c8
-│   │   ├── c9
-│   │   ├── ca
-│   │   ├── cb
-│   │   ├── cc
-│   │   ├── ce
-│   │   ├── cf
-│   │   ├── d0
-│   │   ├── d1
-│   │   ├── d2
-│   │   ├── d3
-│   │   ├── d4
-│   │   ├── d5
-│   │   ├── d6
-│   │   ├── d7
-│   │   ├── d8
-│   │   ├── d9
-│   │   ├── da
-│   │   ├── db
-│   │   ├── dd
-│   │   ├── de
-│   │   ├── df
-│   │   ├── e0
-│   │   ├── e1
-│   │   ├── e2
-│   │   ├── e3
-│   │   ├── e4
-│   │   ├── e5
-│   │   ├── e6
-│   │   ├── e8
-│   │   ├── e9
-│   │   ├── ea
-│   │   ├── ec
-│   │   ├── ed
-│   │   ├── ee
-│   │   ├── ef
-│   │   ├── f0
-│   │   ├── f1
-│   │   ├── f2
-│   │   ├── f3
-│   │   ├── f4
-│   │   ├── f5
-│   │   ├── f6
-│   │   ├── f7
-│   │   ├── f8
-│   │   ├── f9
-│   │   ├── fa
-│   │   ├── fb
-│   │   ├── fc
-│   │   ├── fd
-│   │   ├── fe
-│   │   ├── ff
-│   │   ├── info
-│   │   └── pack
-│   └── refs
-│       ├── heads
-│       ├── remotes
-│       └── tags
-├── .local
-│   ├── bin
-│   ├── lib
-│   │   └── python3.8
-│   └── share
-│       ├── applications
-│       ├── fonts
-│       ├── larbs
-│       ├── nyxt
-│       ├── virtualenv
-│       ├── webkitgtk
-│       └── xorg
-└── scripts
-    └── .scripts
-        ├── cron
-        ├── i3cmds
-        ├── statusbar
-        └── tools
-
-370 directories
 :end:
+
 ** =$HOME/.config=
+#+begin_src shell :tangle .local/bin/housekeeping.sh :results drawer
+tree -a -L 2 $HOME/git $1 && echo -e "\n\n"
+#+end_src
+** =$HOME/.config/guix=
+#+begin_src shell :tangle .local/bin/housekeeping.sh :results drawer
+tree -a $HOME/dotfiles/.config/guix $1 && echo -e "\n\n"
+#+end_src
+
+#+RESULTS:
+:results:
+/home/samuel//dotfiles/.config/guix
+├── channels.scm
+├── current -> /var/guix/profiles/per-user/samuel/current-guix
+└── qzdl
+    ├── cosas.scm
+    ├── device
+    │   ├── cleanpi.scm
+    │   ├── donutrust.scm
+    │   └── xps.scm
+    ├── jobs.scm
+    ├── package
+    │   ├── go-mvdan-sh.scm
+    │   ├── manifest.scm
+    │   └── python-3.6.4.scm
+    ├── rules.scm
+    ├── services.scm
+    └── system
+        ├── base.scm
+        ├── install.scm
+        └── minimal.scm
+
+5 directories, 14 files
+:end:
+** =$HOME/.local/bin=
+#+begin_src shell :tangle .local/bin/housekeeping.sh :results drawer
+tree -a $HOME/dotfiles/.local/bin $1 && echo -e "\n\n"
+#+end_src
+
+#+RESULTS:
+:results:
+:end:
+
 ** =$HOME/git=
 keep it as =category/{repo, repo, repo}= for sanity
-#+begin_src shell :results drawer :tangle no
-cd $HOME/git
-tree -L 2
+
+#+begin_src shell :tangle .local/bin/housekeeping.sh :results drawer
+tree -a -L 2 $HOME/git $1  && echo -e "\n\n"
 #+end_src
 
 #+RESULTS:
 :results:
-.
-├── build
-│   ├── k9s
-│   └── xprintidle
-├── ns
-│   ├── agenting_tools
-│   ├── aws-okta-config
-│   ├── ns.sh
-│   ├── om
-│   └── routing
-├── qzdl
-│   └── libre-ary
-└── sys
-    └── guix
-
-12 directories, 1 file
 :end:
 
-
 * configuration
-** testing
+** docs, testing
 *** helpers
-#+begin_src shell :tangle .local/bin/test-helpers.sh
+#+begin_src shell :tangle .local/bin/helpers.sh
 headline() {
   echo "============================"
   echo $@
@@ -460,9 +104,9 @@ block() {
 
 delim() { echo && echo; }
 #+end_src
-*** test-system
-#+begin_src shell :tangle .local/bin/test-system.sh
-source test-helpers.sh
+*** dotfiles-test.sh
+#+begin_src shell :tangle .local/bin/dotfiles-test.sh
+source helpers.sh
 source $HOME/.config/shell/profile
 
 MY_BASEPATH=$HOME/dotfiles
@@ -502,6 +146,7 @@ test-load-file() {
       echo ".....LOADING 'GUIX REPL -L $GUIX_LOADPATH_MY $FILE'"
       guix repl -L $GUIX_LOADPATH_MY $FILE \
           && qz_color $qz_greener ".....PASSED: $FILE"
+      guild compile -L $GUIX_LOADPATH_MY $FILE
     )
 }
 
@@ -527,36 +172,9 @@ run_test
 
 #+RESULTS:
 
-*** update-dotfiles
-#+begin_src shell :tangle .local/bin/update-dotfiles.sh
-source test-helpers.sh
-cd $HOME/dotfiles
-
-headline "UPDATING DOTFILES"
-delim
-
-block "BEGIN: COMPILE DOTFILES"
-emacs -Q --batch --script $HOME/dotfiles/.doom.d/scripts/tangle-dotfiles.el
-block "END: COMPILE DOTFILES"
-delim
-
-block "BEGIN: STOW DOTFILES"
-stow .
-block "END: STOW DOTFILES"
-delim
-
-block "BEGIN: UPDATE EMACS INSTANCE"
-emacsclient \
-    -e '(load-file "~/dotfiles/.doom.d/per-system-settings.el")' \
-    -a "No emacs server running"
-block "END: UPDATE EMACS INSTANCE"
-delim
-
-test-system.sh
-#+end_src
-*** compilation
-**** .doom.d/tangle-dotfiles.el
-#+begin_src emacs-lisp :tangle .doom.d/scripts/tangle-dotfiles.el
+*** dotfiles-tangle.el
+:: .doom.d/scripts/dotfiles-tangle.el
+#+begin_src emacs-lisp :tangle .doom.d/scripts/dotfiles-tangle.el
 (require 'org)
 
 (defun qz/tangle-sys ()
@@ -581,37 +199,113 @@ test-system.sh
 (qz/tangle-sys)
 #+end_src
 
-*** debug
-**** tree
-#+begin_src shell :results drawer :tangle no
-tree $HOME/dotfiles/.config/guix
+#+RESULTS:
+
+*** dotfiles-update.sh
+
+#+begin_src shell :tangle .local/bin/dotfiles-update.sh
+source helpers.sh
+cd $HOME/dotfiles
+
+headline "UPDATING DOTFILES"
+delim
+
+block "BEGIN: COMPILE DOTFILES"
+emacs -Q --batch --script $HOME/dotfiles/.doom.d/scripts/dotfiles-tangle.el
+block "END: COMPILE DOTFILES"
+delim
+
+block "BEGIN: STOW DOTFILES"
+dotfiles-nonstow.sh
+stow .
+block "END: STOW DOTFILES"
+delim
+
+block "BEGIN: UPDATE EMACS INSTANCE"
+emacsclient \
+    -e '(load-file "~/dotfiles/.doom.d/per-system-settings.el")' \
+    -a "No emacs server running"
+block "END: UPDATE EMACS INSTANCE"
+delim
+#+end_src
+
+*** dotfiles-nonstow.sh
+#+begin_src shell :tangle .local/bin/dotfiles-nonstow.sh
+for f in .profile .bash_profile .zsh_profile; do
+    [ -f $HOME/$f ] && echo "$HOME/$f already exists!" && continue
+    ln -s $HOME/dotfiles/.config/shell/profile $HOME/$f
+done;
+#+end_src
+
+*** dotfiles-get-guix-deps.sh
+:: .local/bin/dotfiles-get-guix-deps.sh
+
+make some pretty graphs from the dependency graph. thanks guild developers
+#+begin_src shell :tangle .local/bin/dotfiles-get-guix-deps.sh :results drawer
+cd $HOME/dotfiles
+mkdir -p docs
+cd docs
+#drivers=(dot neato twopi circo fdp sfdp patchwork)
+driver=neato
+
+for file in $(find $HOME/.config/guix/) ; do
+    [ ! -f $file ] && continue
+    df="$(basename $file)"
+    [ $VERBOSE ] && echo "deps: running guild for deps of $file, to $df"
+    guild use2dot $file --no-auto-compile > $df
+
+    dp="$df.png"
+    qz_color $qz_greener "✔:$driver:$dp"
+    $driver $df -Tpng -o $dp -Goverlap=false -Gsplines=true
+done
 #+end_src
 
 #+RESULTS:
 :results:
-/home/samuel//dotfiles/.config/guix
-├── channels.scm
-├── current -> /var/guix/profiles/per-user/samuel/current-guix
-└── qzdl
-    ├── cosas.scm
-    ├── device
-    │   ├── cleanpi.scm
-    │   ├── donutrust.scm
-    │   └── xps.scm
-    ├── jobs.scm
-    ├── package
-    │   ├── go-mvdan-sh.scm
-    │   ├── manifest.scm
-    │   └── python-3.6.4.scm
-    ├── rules.scm
-    ├── services.scm
-    └── system
-        ├── base.scm
-        ├── install.scm
-        └── minimal.scm
-
-5 directories, 14 files
+[1;32m✔:neato:services.scm.png[0m
+[1;32m✔:neato:rules.scm.png[0m
+[1;32m✔:neato:base.scm.png[0m
+[1;32m✔:neato:install.scm.png[0m
+[1;32m✔:neato:minimal.scm.png[0m
+[1;32m✔:neato:manifest.scm.png[0m
+[1;32m✔:neato:python-3.6.4.scm.png[0m
+[1;32m✔:neato:go-mvdan-sh.scm.png[0m
+[1;32m✔:neato:xps.scm.png[0m
+[1;32m✔:neato:donutrust.scm.png[0m
+[1;32m✔:neato:cleanpi.scm.png[0m
+[1;32m✔:neato:jobs.scm.png[0m
+[1;32m✔:neato:cosas.scm.png[0m
+[1;32m✔:neato:channels.scm.png[0m
 :end:
+
+*** precommit
+
+to run before committing, compile docs, test etc
+#+begin_src shell :tangle .local/bin/dotfiles-precommit.sh
+dotfiles-update.sh
+dotfiles-test.sh
+dotfiles-get-guix-deps.sh
+#+end_src
+
+#+RESULTS:
+| [1;32m✔:neato:services.scm.png[0m     |
+| [1;32m✔:neato:rules.scm.png[0m        |
+| [1;32m✔:neato:base.scm.png[0m         |
+| [1;32m✔:neato:install.scm.png[0m      |
+| [1;32m✔:neato:minimal.scm.png[0m      |
+| [1;32m✔:neato:manifest.scm.png[0m     |
+| [1;32m✔:neato:python-3.6.4.scm.png[0m |
+| [1;32m✔:neato:go-mvdan-sh.scm.png[0m  |
+| [1;32m✔:neato:xps.scm.png[0m          |
+| [1;32m✔:neato:donutrust.scm.png[0m    |
+| [1;32m✔:neato:cleanpi.scm.png[0m      |
+| [1;32m✔:neato:jobs.scm.png[0m         |
+| [1;32m✔:neato:cosas.scm.png[0m        |
+| [1;32m✔:neato:channels.scm.png[0m     |
+
+*** debug
+**** tree
+
 **** tangled files
 #+begin_src shell :tangle no
 ( for f in $(cat systems.org | grep ":tangle" | cut -d' ' -f4); do [ -f $f ] && echo $f; done; ) | sort | uniq
@@ -744,6 +438,10 @@ test-load-file $HOME/dotfiles/.config/guix/qzdl/cosas.scm
 :: .config/guix/qzdl/rules.scm
 :: [[file:./docs/rules.scm.png]]
 
+**** test
+#+begin_src shell :tangle .local/bin/test-system.sh
+test-load-file .config/guix/qzdl/rules.scm
+#+end_src
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/rules.scm
 (define-module (qzdl rules)
@@ -753,17 +451,6 @@ test-load-file $HOME/dotfiles/.config/guix/qzdl/cosas.scm
             %xorg-libinput-config
             %xorg-intel-antitearing-i915))
 #+end_src
-**** test
-#+begin_src shell :tangle .local/bin/test-system.sh
-test-load-file .config/guix/qzdl/rules.scm
-#+end_src
-***** verify
-#+begin_src scheme :tangle no
-(use-modules (qzdl services))
-(use-modules (ice-9 pretty-print))
-#+end_src
-
-#+RESULTS:
 
 **** udev-rule-backlight
 :: [[https://guix.gnu.org/manual/en/html_node/Base-Services.html][Base Services (GNU Guix Reference Manual)]]
@@ -805,8 +492,8 @@ Section \"InputClass\"
 EndSection")
 #+end_src
 
-**** libinput-gestures
-#+begin_src :tangle no
+**** TODO libinput-gestures
+#+begin_src shell :tangle no
 # previously ~/.config/libinput-gestures.conf
 
 gesture: swipe right 3 xdotool key Alt+Left
@@ -816,9 +503,14 @@ gesture: swipe left 3 xdotool key Alt+Right
 gesture: pinch out xdotool key Ctrl+plus
 gesture: pinch in xdotool key Ctrl+minus
 #+end_src
-**** TODO xorg screentearing-rule
+**** xorg screentearing-rule
 :: https://www.dedoimedo.com/computers/linux-intel-graphics-video-tearing.html
 
+replace =i915= with your video driver, as decribed below
+
+this stops tears, but probably wrecks some other thing about frame buffering.
+
+IMO, on my hardware, it's better than without
 #+begin_src scheme :tangle .config/guix/qzdl/rules.scm
 (define %xorg-intel-antitearing-base
   "Section \"Device\"
@@ -1964,22 +1656,12 @@ test-load-file .config/guix/qzdl/system/minimal.scm
   #:use-module (gnu)
   #:use-module (gnu system)
   #:use-module (srfi srfi-1)
-  #:use-module (gnu services pm)             ;; clipboard menu
-  #:use-module (gnu services cups)           ;; printing
-  #:use-module (gnu services docker)
-  #:use-module (gnu services databases)
-  #:use-module (gnu services virtualization) ;; VMs
-  #:use-module (gnu packages xorg)           ;; graphical display
   #:use-module (gnu packages gnuzilla)       ;; GNU mozilla suite
   #:use-module (gnu packages audio)          ;;
   #:use-module (gnu packages emacs)          ;;
   #:use-module (gnu packages emacs-xyz)
   #:use-module (gnu packages pulseaudio)     ;; audio daemon
   #:use-module (gnu packages wm)             ;; lots of wm options (blote)
-  #:use-module (gnu packages cups)           ;; printing
-  #:use-module (gnu packages mtools)         ;; interact with ms disks
-  #:use-module (gnu packages gtk)            ;; gnome stuff  (blote)
-  #:use-module (gnu packages web-browsers)   ;; web browsers (blote)
   #:use-module (gnu packages linux)          ;; for bluez
   #:use-module (gnu packages xorg)           ;; xf86-input-libinput
   #:export (%minimal-services
@@ -2134,8 +1816,8 @@ test-load-file .config/guix/qzdl/device/donutrust.scm
   #:use-module (gnu)
   #:use-module (gnu services databases)
   #:use-module (nongnu packages linux)
-  #:use-module (qzdl system minimal)
   #:use-module (qzdl services)
+  #:use-module (qzdl system minimal)
   #:export (%donutrust-services
             donutrust-operating-system))
 #+end_src
@@ -2766,13 +2448,8 @@ export alias rrp="source $HOME/.profile"
 #+end_src
 
 **** symlink profiles :deploy:
-#+begin_src shell :tangle .local/bin/deploy-dotfiles.sh
-for f in .profile .bash_profile .zsh_profile; do
-    ln -s $HOME/dotfiles/.config/shell/profile $HOME/$f
-done;
-#+end_src
 
-#+RESULTS:
+see .local/bin/dotfiles-nonstow.sh
 
 ** scripts
 *** TODO screenshot
@@ -3116,74 +2793,8 @@ makes me think about how the shared proceeds of selfish interests are utility.
 
 says nothing about how it's maintained in the future
 
-* docs, analysis
-
-** testing all
-#+begin_src shell :tangle .local/bin/get-deps-qzdl.sh :results drawer
-cd $HOME/dotfiles
-mkdir -p docs
-cd docs
-
-for file in $(find $HOME/.config/guix/) ; do
-    [ ! -f $file ] && continue
-    df="$(basename $file)"
-    echo "deps: running guild for deps of $file, to $df"
-    guild use2dot $file > $df
-
-    drivers=(dot neato twopi circo fdp sfdp patchwork)
-    for driver in $drivers ; do
-        dp="$df.png"
-        echo "visualizing: $driver, for $df, to $dp"
-        $driver $df -Tpng -o $dp & echo
-    done
-done
-#+end_src
-
-#+RESULTS:
-:results:
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/services.scm, to services.scm
-visualizing: dot, for services.scm, to services.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/rules.scm, to rules.scm
-visualizing: dot, for rules.scm, to rules.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/base.scm, to base.scm
-visualizing: dot, for base.scm, to base.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/install.scm, to install.scm
-visualizing: dot, for install.scm, to install.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/minimal.scm, to minimal.scm
-visualizing: dot, for minimal.scm, to minimal.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/manifest.scm, to manifest.scm
-visualizing: dot, for manifest.scm, to manifest.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/python-3.6.4.scm, to python-3.6.4.scm
-visualizing: dot, for python-3.6.4.scm, to python-3.6.4.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/go-mvdan-sh.scm, to go-mvdan-sh.scm
-visualizing: dot, for go-mvdan-sh.scm, to go-mvdan-sh.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/xps.scm, to xps.scm
-visualizing: dot, for xps.scm, to xps.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/donutrust.scm, to donutrust.scm
-visualizing: dot, for donutrust.scm, to donutrust.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/cleanpi.scm, to cleanpi.scm
-visualizing: dot, for cleanpi.scm, to cleanpi.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/jobs.scm, to jobs.scm
-visualizing: dot, for jobs.scm, to jobs.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/qzdl/cosas.scm, to cosas.scm
-visualizing: dot, for cosas.scm, to cosas.scm.png
-
-deps: running guild for deps of /home/samuel//.config/guix/channels.scm, to channels.scm
-visualizing: dot, for channels.scm, to channels.scm.png
-
-:end:
+*
+* Index
 
 * Footnotes
 [fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]

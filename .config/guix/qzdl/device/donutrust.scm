@@ -3,8 +3,8 @@
   #:use-module (gnu)
   #:use-module (gnu services databases)
   #:use-module (nongnu packages linux)
-  #:use-module (qzdl system minimal)
   #:use-module (qzdl services)
+  #:use-module (qzdl system minimal)
   #:export (%donutrust-services
             donutrust-operating-system))
 
