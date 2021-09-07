@@ -742,6 +742,7 @@ test-load-file $HOME/dotfiles/.config/guix/qzdl/cosas.scm
 :header-args: :tangle .config/guix/qzdl/rules.scm
 :END:
 :: .config/guix/qzdl/rules.scm
+:: [[file:./docs/rules.scm.png]]
 
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/rules.scm
@@ -846,6 +847,7 @@ sudo lspci -k | grep -EA3 'VGA|3D|Display'
 :: .config/guix/qzdl/jobs.scm
 :: [[https://www.gnu.org/software/mcron/design.html][Mcron User Requirements]]
 :: [[https://www.gnu.org/software/mcron/design.html][Mcron User Requirements]]
+:: [[file:./docs/jobs.scm.png]]
 
 https://www.gnu.org/software/mcron/manual/html_node/Introduction.html#Introduction
 
@@ -887,8 +889,8 @@ test-load-file .config/guix/qzdl/jobs.scm
 :header-args: :tangle .config/guix/qzdl/services.scm
 :END:
 :: .config/guix/qzdl/services.scm
+:: [[file:./docs/services.scm.png]]
 
-file:./doc/services.scm.png
 
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
@@ -1107,6 +1109,7 @@ grafana, prometheus, ...
 
 ** =(qzdl package)=
 :: .config/guix/qzdl/package
+
 
 *** manifest
 #+begin_src scheme :tangle .config/guix/qzdl/package/manifest.scm
@@ -1795,6 +1798,7 @@ created using modules, as described:
 :ROAM_ALIASES: "guix base system"
 :END:
 ::  .config/guix/qzdl/system/base.scm
+:: [[file:./docs/base.scm.png]]
 
 ***** define
 #+begin_src scheme :tangle .config/guix/qzdl/system/base.scm
@@ -1934,6 +1938,8 @@ and intel ucode images to the bootloader config in initrd.
 :ROAM_ALIASES: "guix tiny system"
 :END:
 :: .config/guix/qzdl/system/tiny.scm
+:: [[file:./docs/tiny.scm.png]]
+
 consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 *** =(qzdl system minimal)= :file:
 :PROPERTIES:
@@ -1942,6 +1948,7 @@ consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 :ROAM_ALIASES: "guix minimal system"
 :END:
 :: .config/guix/qzdl/system/minimal.scm
+:: [[file:./docs/minimal.scm.png]]
 
 things for 'full systems' -> consumes [[id:61f53bfc-e34f-42ac-9dea-6f5e57f9a056][guix base system]]
 
@@ -2026,8 +2033,9 @@ test-load-file .config/guix/qzdl/system/minimal.scm
 #+end_src
 
 *** =(qzdl system install)= :file:
-:: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
 :: .config/guix/qzdl/system/install.scm
+:: https://gitlab.com/nonguix/nonguix/blob/master/nongnu/system/install.scm
+:: [[file:./docs/install.scm.png]]
 
 #+begin_src scheme :tangle .config/guix/qzdl/system/install.scm
 ;;; Copyright © 2019 Alex Griffin <a@ajgrf.com>
@@ -2078,6 +2086,7 @@ installation-os-nonfree
 ** =(qzdl devices)=
 *** =(qzdl devices xps)= :@home:
 :: .config/guix/qzdl/device/xps.scm
+:: [[file:./docs/xps.scm.png]]
 
 consuming [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
@@ -2093,6 +2102,7 @@ test-load-file .config/guix/qzdl/device/xps.scm
 
 *** =(qzdl devices cleanpi)= :@home:
 :: .config/guix/qzdl/device/cleanpi.scm
+:: [[file:./docs/cleanpi.scm.png]]
 
 **** test
 #+begin_src shell :tangle .local/bin/test-system.sh
@@ -2109,6 +2119,7 @@ test-load-file .config/guix/qzdl/device/cleanpi.scm
 :header-args: :tangle .config/guix/qzdl/device/donutrust.scm
 :END:
 :: .config/guix/qzdl/device/donutrust.scm
+:: [[file:./docs/donutrust.scm.png]]
 
 my thinkpad x1 carbon; a work machine. consumes [[id:1134d479-ddd6-4963-a001-aa84f471db49][guix minimal system]]
 
@@ -3185,6 +3196,6 @@ visualizing: dot, for channels.scm, to channels.scm.png
 [fn:1] check the existing timezone with the following ([[https://www.tecmint.com/check-linux-timezone/][How to Check Timezone in Linux]])
 #+begin_src bash :tangle no
   timedatectl | grep -i "time zone"
-#+end_src
+p#+end_src
 
 #+RESULTS:
