@@ -719,6 +719,8 @@ guix specified by the given commit sha
 :header-args: :tangle .config/guix/qzdl/qzdl.scm
 :END:
 :: .config/guix/qzdl/cosas.scm
+:: [[file:./docs/cosas.scm.png]]
+
 **** define
 #+begin_src scheme :tangle .config/guix/qzdl/cosas.scm
 (define-module (qzdl cosas)
@@ -3106,10 +3108,10 @@ says nothing about how it's maintained in the future
 * docs, analysis
 
 ** testing all
-#+begin_src shell :tangle .local/bin/get-deps-qzdl.sh
+#+begin_src shell :tangle .local/bin/get-deps-qzdl.sh :results drawer
 cd $HOME/dotfiles
-mkdir -p doc
-cd doc
+mkdir -p docs
+cd docs
 
 for file in $(find $HOME/.config/guix/) ; do
     [ ! -f $file ] && continue
@@ -3121,40 +3123,56 @@ for file in $(find $HOME/.config/guix/) ; do
     for driver in $drivers ; do
         dp="$df.png"
         echo "visualizing: $driver, for $df, to $dp"
-        $driver $df -Tpng -o $dp
+        $driver $df -Tpng -o $dp & echo
     done
 done
 #+end_src
 
 #+RESULTS:
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/services.scm             | to services.scm      |                         |
-| visualizing: dot                                                                       | for services.scm     | to services.scm.png     |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/rules.scm                | to rules.scm         |                         |
-| visualizing: dot                                                                       | for rules.scm        | to rules.scm.png        |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/base.scm          | to base.scm          |                         |
-| visualizing: dot                                                                       | for base.scm         | to base.scm.png         |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/install.scm       | to install.scm       |                         |
-| visualizing: dot                                                                       | for install.scm      | to install.scm.png      |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/minimal.scm       | to minimal.scm       |                         |
-| visualizing: dot                                                                       | for minimal.scm      | to minimal.scm.png      |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/manifest.scm     | to manifest.scm      |                         |
-| visualizing: dot                                                                       | for manifest.scm     | to manifest.scm.png     |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/python-3.6.4.scm | to python-3.6.4.scm  |                         |
-| visualizing: dot                                                                       | for python-3.6.4.scm | to python-3.6.4.scm.png |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/go-mvdan-sh.scm  | to go-mvdan-sh.scm   |                         |
-| visualizing: dot                                                                       | for go-mvdan-sh.scm  | to go-mvdan-sh.scm.png  |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/xps.scm           | to xps.scm           |                         |
-| visualizing: dot                                                                       | for xps.scm          | to xps.scm.png          |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/donutrust.scm     | to donutrust.scm     |                         |
-| visualizing: dot                                                                       | for donutrust.scm    | to donutrust.scm.png    |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/cleanpi.scm       | to cleanpi.scm       |                         |
-| visualizing: dot                                                                       | for cleanpi.scm      | to cleanpi.scm.png      |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/jobs.scm                 | to jobs.scm          |                         |
-| visualizing: dot                                                                       | for jobs.scm         | to jobs.scm.png         |
-| deps: running guild for deps of /home/samuel//.config/guix/qzdl/cosas.scm                | to cosas.scm         |                         |
-| visualizing: dot                                                                       | for cosas.scm        | to cosas.scm.png        |
-| deps: running guild for deps of /home/samuel//.config/guix/channels.scm                  | to channels.scm      |                         |
-| visualizing: dot                                                                       | for channels.scm     | to channels.scm.png     |
+:results:
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/services.scm, to services.scm
+visualizing: dot, for services.scm, to services.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/rules.scm, to rules.scm
+visualizing: dot, for rules.scm, to rules.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/base.scm, to base.scm
+visualizing: dot, for base.scm, to base.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/install.scm, to install.scm
+visualizing: dot, for install.scm, to install.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/system/minimal.scm, to minimal.scm
+visualizing: dot, for minimal.scm, to minimal.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/manifest.scm, to manifest.scm
+visualizing: dot, for manifest.scm, to manifest.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/python-3.6.4.scm, to python-3.6.4.scm
+visualizing: dot, for python-3.6.4.scm, to python-3.6.4.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/package/go-mvdan-sh.scm, to go-mvdan-sh.scm
+visualizing: dot, for go-mvdan-sh.scm, to go-mvdan-sh.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/xps.scm, to xps.scm
+visualizing: dot, for xps.scm, to xps.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/donutrust.scm, to donutrust.scm
+visualizing: dot, for donutrust.scm, to donutrust.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/device/cleanpi.scm, to cleanpi.scm
+visualizing: dot, for cleanpi.scm, to cleanpi.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/jobs.scm, to jobs.scm
+visualizing: dot, for jobs.scm, to jobs.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/qzdl/cosas.scm, to cosas.scm
+visualizing: dot, for cosas.scm, to cosas.scm.png
+
+deps: running guild for deps of /home/samuel//.config/guix/channels.scm, to channels.scm
+visualizing: dot, for channels.scm, to channels.scm.png
+
+:end:
 
 * Footnotes
 [fn:5] [[https://www.gnu.org/software/guile/manual/html_node/Using-Guile-Interactively.html#Using-Guile-Interactively][Using Guile Interactively (Guile Reference Manual)]]
