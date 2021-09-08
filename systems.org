@@ -2127,6 +2127,7 @@ alias \
 
 # my functions
 alias \
+  gV='qz_guix_vm' \
   gR='qz_guix_reconfigure' \
   gRd='qz_guix_reconfigure_debug' \
   gse='qz_guix_source_extra_profile'
@@ -2157,6 +2158,12 @@ qz_guix_reconfigure()  {
     sudo -E guix system \
         -L "$HOME/.config/guix" \
         reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
+}
+
+qz_guix_vm()  {
+    sudo -E guix system \
+        -L "$HOME/.config/guix" \
+        vm "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
 # guix profile commands; make it easy to switch and check

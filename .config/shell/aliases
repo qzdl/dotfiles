@@ -27,6 +27,7 @@ alias \
 
 # my functions
 alias \
+  gV='qz_guix_vm' \
   gR='qz_guix_reconfigure' \
   gRd='qz_guix_reconfigure_debug' \
   gse='qz_guix_source_extra_profile'

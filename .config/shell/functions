@@ -22,6 +22,12 @@ qz_guix_reconfigure()  {
         reconfigure "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
 }
 
+qz_guix_vm()  {
+    sudo -E guix system \
+        -L "$HOME/.config/guix" \
+        vm "$HOME/.config/guix/qzdl/device/$(hostname).scm" $@;
+}
+
 # guix profile commands; make it easy to switch and check
 qz_guix_source_extra_profile() {
     qz_guix_source_profile "$GUIX_EXTRA_PROFILES/$@";
