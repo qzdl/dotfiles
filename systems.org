@@ -88,6 +88,17 @@ tree -a -L 2 $HOME/git $1  && echo -e "\n\n"
 :results:
 :end:
 
+*** init
+#+begin_src shell :tangle no
+cd $HOME
+mkdir -p git
+
+
+for $d in build sys ns qzdl ; do
+    echo "$HOME/git/$d"
+    mkdir -p $HOME/git/$d
+#+end_src
+
 * configuration
 ** docs, testing
 *** helpers
@@ -802,11 +813,36 @@ grafana, prometheus, ...
 ** =(qzdl package)=
 :: .config/guix/qzdl/package
 
-
 *** manifest
 #+begin_src scheme :tangle .config/guix/qzdl/package/manifest.scm
 (specifications->manifest
-  (list "emacs-native-comp"
+  (list "figlet"
+        "nyxt"
+        "lm-sensors"
+        "password-store"
+        "parallel"
+        "gnuplot"
+        "r"
+        "csvkit"
+        "jq"
+        "maim"
+        "scrot"
+        "awscli"
+        "libnotify"
+        "font-fira-code"
+        "font-google-roboto"
+        "guile-git"
+        "emacs-forge"
+        "guile-readline"
+        "guile-colorized"
+        "texlive-base"
+        "xss-lock"
+        "xset"
+        "xsettingsd"
+        "xhost"
+        "sxiv"
+        "graphviz"
+        "emacs-native-comp"
         "mpv"
         "ffmpeg"
         "python-virtualenv"
@@ -842,7 +878,6 @@ grafana, prometheus, ...
         "pango"
         "compton"
         "icecat"
-        "nyxt"
         "feh"
         "xf86-input-libinput"
         "xorg-server"
@@ -862,7 +897,6 @@ grafana, prometheus, ...
         "autoconf"
         "rlwrap"
         "readline"
-        "st"
         "guile"
         "setxkbmap"
         "tar"
@@ -870,8 +904,6 @@ grafana, prometheus, ...
         "zlib"
         "bzip2"
         "glibc"
-        "font-fira-code"
-        "font-google-roboto"
         "emacs-vterm"
         "emacs-emacsql"
         "make"
@@ -883,8 +915,9 @@ grafana, prometheus, ...
         "xf86-video-fbdev"
         "emacs-desktop-environment"))
 #+end_src
-*** v4l2loopback-linux-module
-virtual video devices; hijack the webcam feed, or stream an application though loopback
+*** TODO v4l2loopback-linux-module
+virtual video devices; hijack the webcam feed, or stream an application though
+loopback
 *** mtools :core:
 :: [[https://www.gnu.org/software/mtools/][Mtools - GNU Project - Free Software Foundation]]
 *** dunst
@@ -1189,19 +1222,9 @@ saml2aws --version
 | LICENSE.md |
 | README.md  |
 | saml2aws   |
-*** * configuring
-#+begin_src bash
-YOUR_ORGANISATION="newstore-sso"
-OKTA_APPLICATION_ID=""
-OKTA_OTHER_ID=""
-echo "https://$YOUR_ORGANIZATION.okta.com/home/amazon_aws/$OKTA_APPLICATION_ID/$OKTA_OTHER_ID"
-https://newstore-sso.okta.com/home/amazon_aws/0oa15tj4i1PRzffRm357/272?fromHome=true
-#+end_src
-
-#+RESULTS:
-
 *** (or equiv [[https://github.com/derailed/k9s][GitHub - derailed/k9s: 🐶 Kubernetes CLI To Manage Your Clusters In Style!]])
 :: [[https://github.com/kubernetes-el/kubernetes-el][GitHub - kubernetes-el/kubernetes-el: Emacs porcelain for Kubernetes.]]
+
 *** kubernetes
 
 #+begin_src bash :results drawer
@@ -1434,9 +1457,9 @@ across multiple hosts; providing basic mechanisms for deployment, maintenance,
 and scaling of applications.")
     (license license:asl2.0)))
 
-
 *** kubectl
 ew hacky binary
+
 #+begin_src shell :tangle no :results drawer
 cd /tmp/ && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
@@ -2574,6 +2597,8 @@ git add .
 git commit -m "auto-commit | $(date -u)"
 git push && notify-send "Successfully pushed $PWD"
 #+end_src
+*** work
+see [[id:24dc0737-03ea-4535-a692-4bb0e5c07d58][Commands @ NewStore]] to tangle to .local/bin
 
 * dotfiles
 ** psql
@@ -2793,7 +2818,7 @@ makes me think about how the shared proceeds of selfish interests are utility.
 
 says nothing about how it's maintained in the future
 
-*
+
 * Index
 
 * Footnotes
